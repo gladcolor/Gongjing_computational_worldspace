@@ -1,0 +1,1468 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Influence cells v17 | Gongjing 共境</title>
+<style>
+:root{--bg:#f7f7f4;--ink:#1d2429;--muted:#6d767c;--line:#d7dbdd;--panel:rgba(255,255,255,.92);--blue:#4da8d0}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif}
+body{padding:18px}
+.app{max-width:1280px;margin:auto;display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:16px;align-items:start}
+.main{min-width:0}
+.title{font-family:Georgia,serif;font-size:25px;margin:0 0 5px}
+.sub{color:var(--muted);font-size:13px;line-height:1.45;margin:0 0 12px;max-width:880px}
+.canvasWrap{position:relative;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px;overflow:visible}
+.canvasWrap canvas{display:block;width:100%;height:auto;aspect-ratio:4/3;background:white}
+.controls{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0}
+.btn{border:1px solid var(--line);background:white;border-radius:999px;padding:8px 12px;font-weight:650;font-size:12px;cursor:pointer;color:var(--ink)}
+.btn.primary{background:var(--ink);color:white}
+.btn.active{outline:2px solid rgba(77,168,208,.25);border-color:#7fbdd8}
+.speed{display:flex;align-items:center;gap:8px;min-width:220px;padding:0 5px;color:var(--muted);font-size:12px}
+.speed input{flex:1}
+.metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.metric{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 9px}
+.metric span{display:block;color:var(--muted);font-size:10px}
+.metric b{font-size:15px;display:block;margin-top:2px}
+.status{margin-top:8px;font-size:12px;color:#3e4a51}
+.side{display:grid;gap:10px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:13px}
+.card h2{font:600 16px Georgia,serif;margin:0 0 8px}
+.card p,.card li{font-size:12px;line-height:1.42;color:#4d5960}
+.card ul{padding-left:17px;margin:7px 0}
+.eq{font:11px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;background:#f4f6f7;border-radius:8px;padding:7px;margin:6px 0;overflow:auto}
+.legend{display:grid;gap:6px}
+.leg{display:grid;grid-template-columns:18px 1fr auto;gap:7px;align-items:center;font-size:11px}
+.sw{width:16px;height:16px;border:1px solid rgba(0,0,0,.15)}
+.periods{display:flex;flex-wrap:wrap;gap:5px}
+.pill{font:10px ui-monospace,monospace;background:#f1f4f5;border:1px solid var(--line);padding:4px 6px;border-radius:999px}
+
+.paintbar{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin:8px 0 10px;padding:9px 10px;background:#fff;border:1px solid var(--line);border-radius:12px}
+.paintbar .label,.archivebar .label{font-size:11px;color:var(--muted);font-weight:650;margin-right:2px}
+.paintbtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 10px;font-size:11px;font-weight:650;color:var(--ink);cursor:pointer}
+.paintbtn.active{outline:2px solid rgba(77,168,208,.25);border-color:#7fbdd8}
+.paintdot{width:12px;height:12px;border:1px solid rgba(0,0,0,.2);display:inline-block}
+.brushsel,.miniinput{border:1px solid var(--line);border-radius:999px;padding:7px 9px;background:#fff;color:var(--ink);font:600 11px system-ui}
+.miniinput{width:88px}
+.drawhint{font-size:11px;color:var(--muted);line-height:1.35;flex:1 1 220px}
+.archivebar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;margin:0 0 10px;padding:10px;background:#fff;border:1px solid var(--line);border-radius:12px}
+.archivebar textarea{width:100%;min-height:74px;resize:vertical;border:1px solid var(--line);border-radius:9px;padding:9px 10px;font:12px/1.4 system-ui;color:var(--ink);background:#fcfcfb}
+.archiveactions{display:flex;flex-direction:column;align-items:stretch;gap:7px;min-width:205px}
+.archiverow{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.archiveStatus{font-size:10px;line-height:1.35;color:var(--muted);max-width:270px}
+.sourcePanel{background:#fff;border:1px solid var(--line);border-radius:12px;margin:0 0 10px;overflow:hidden}
+.sourcePanel summary{cursor:pointer;padding:10px 12px;font-size:12px;font-weight:700;color:var(--ink);user-select:none}
+.sourceControls{padding:0 10px 10px}
+.sourceAll{display:grid;grid-template-columns:42px repeat(3,minmax(88px,1fr)) auto auto;gap:7px;align-items:end;padding:8px 0;border-top:1px solid #eef0f1;border-bottom:1px solid #eef0f1;margin-bottom:6px}
+.sourceTableWrap{max-height:310px;overflow:auto;border:1px solid #eceeef;border-radius:9px}
+.sourceTable{width:100%;border-collapse:collapse;font-size:10px}
+.sourceTable th,.sourceTable td{padding:5px 6px;border-bottom:1px solid #eef0f1;text-align:left;white-space:nowrap}
+.sourceTable th{position:sticky;top:0;background:#f7f8f8;z-index:1;color:var(--muted);font-weight:700}
+.sourceTable input{width:78px;border:1px solid var(--line);border-radius:7px;padding:5px 6px;font:10px ui-monospace,monospace;background:#fff;color:var(--ink)}
+.sourceTable .sourceNum{font-weight:700;color:var(--ink)}
+.sourceField{display:flex;flex-direction:column;gap:3px}
+.sourceField label{font-size:9px;color:var(--muted)}
+.sourceAll input{width:100%;border:1px solid var(--line);border-radius:8px;padding:6px 7px;font:11px ui-monospace,monospace}
+.sourceApply{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 10px;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap}
+.sourceHelp{font-size:10px;line-height:1.4;color:var(--muted);padding:5px 1px 0}
+@media(max-width:720px){.sourceAll{grid-template-columns:1fr 1fr}.sourceAll>div:first-child{display:none}.sourceTable input{width:68px}}
+
+.canvasWrap canvas{touch-action:none;cursor:crosshair}
+@media(max-width:720px){.archivebar{grid-template-columns:1fr}.archiveactions{min-width:0}.archiveactions .paintbtn{justify-content:center}}
+
+
+
+.sourceHitLayer{position:absolute;inset:0;z-index:15;pointer-events:none}
+.sourceHit{position:absolute;width:32px;height:32px;border-radius:50%;transform:translate(-50%,-50%);pointer-events:auto;cursor:pointer;background:transparent;border:1px solid transparent;box-sizing:border-box}
+.sourceHit:hover,.sourceHit.active{border-color:rgba(61,145,186,.55);background:rgba(79,164,202,.08)}
+
+.sourceHover{
+  position:absolute;
+  z-index:20;
+  display:none;
+  width:222px;
+  padding:9px 10px 8px;
+  background:rgba(255,255,255,.97);
+  border:1px solid var(--line);
+  border-radius:11px;
+  box-shadow:0 8px 24px rgba(25,33,38,.14);
+  transform:translateX(-50%);
+  pointer-events:auto;
+}
+.sourceHover.show{display:block}
+.sourceHover:after{
+  content:"";
+  position:absolute;
+  left:50%;
+  bottom:-7px;
+  width:12px;height:12px;
+  background:#fff;
+  border-right:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+  transform:translateX(-50%) rotate(45deg);
+}
+.sourceHoverTitle{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:6px;font-size:10px}
+.sourceHoverTitle b{font-size:11px}
+.sourceHoverTitle span{color:var(--muted);font-family:ui-monospace,monospace}
+.sourceSliderRow{display:grid;grid-template-columns:67px minmax(0,1fr) 44px;gap:6px;align-items:center;margin:5px 0}
+.sourceSliderRow label{font-size:9px;color:var(--muted);font-weight:650}
+.sourceSliderRow input[type=range]{width:100%;margin:0}
+.sourceSliderValue{text-align:right;font:9px ui-monospace,monospace;color:var(--ink)}
+.sourceHoverHint{font-size:8.5px;color:var(--muted);line-height:1.25;margin-top:5px}
+.sourceNodeHint{font-size:10px;color:var(--muted);margin:-2px 0 8px}
+
+
+.stochbar{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin:0 0 10px;padding:8px 10px;background:#fff;border:1px solid var(--line);border-radius:12px}
+.stochbar .stochlabel{font-size:10px;color:var(--muted);font-weight:700;margin-right:2px}
+.stochbtn{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 10px;font-size:10px;font-weight:700;color:var(--ink);cursor:pointer}
+.stochbtn.active{border-color:#6ba9c8;background:#edf7fb;box-shadow:0 0 0 2px rgba(76,159,198,.12)}
+.stochbtn.entropy.active{border-color:#9a72d8;background:#f5f0fb}
+.stochhelp{font-size:9px;color:var(--muted);line-height:1.3;flex:1 1 240px}
+
+@media(max-width:920px){body{padding:10px}.app{grid-template-columns:1fr}.side{grid-template-columns:1fr 1fr}.metrics{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:620px){.side{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,1fr)}.title{font-size:21px}.canvasWrap{padding:5px}}
+</style>
+<link rel="icon" href="favicon.svg" type="image/svg+xml"><style>
+.public-nav{display:flex;justify-content:space-between;gap:16px;max-width:1060px;margin:0 auto;padding:20px 20px 0;font:14px/1.5 system-ui}
+.public-nav a{color:#245d4f;text-underline-offset:4px}.public-guide{padding:14px 18px;background:#edf3eb;border:1px solid #d5e1d0;border-radius:8px;font:14px/1.65 system-ui;margin:14px 0 20px;color:#203633}.public-guide p{margin:6px 0}.public-guide summary{cursor:pointer;font-weight:600}.app{display:block!important;max-width:1060px!important}.research-details{margin-top:24px;border:1px solid #d8dfd7;padding:16px;border-radius:8px;background:white}.research-details>summary{font:600 15px system-ui;cursor:pointer}.research-details aside{margin-top:16px;display:grid!important;grid-template-columns:1fr 1fr;gap:14px;align-items:start}.research-details aside .card{margin:0}.research-details aside .settings{grid-column:1/-1}a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid #d9a33e;outline-offset:3px}.title{font-size:clamp(25px,4vw,36px)!important}.sub{font-size:15px!important;line-height:1.6!important;color:#485e57!important}
+@media(max-width:760px){.research-details aside{grid-template-columns:1fr}.public-nav{padding-inline:14px}}
+</style></head>
+<body><nav class="public-nav" aria-label="Demonstration navigation"><a href="index.html">共境 Gongjing</a><span><a href="v17.html">v17</a> · <a href="v18.html">v18.1</a> · <a href="river.html">River</a></span></nav>
+<div class="app">
+  <section class="main">
+    <h1 class="title">Influence cells · v17</h1>
+    <p class="sub">This is a cellular automaton: a grid of small cells that change according to rules. The colored cells alter the influence passing through them, and that influence affects which cells survive or appear.</p><div class="public-guide"><p><b>Try this:</b> watch the pattern, select <b>Pause</b>, then use <b>Step once</b> to see one update. Choose a cell type below the picture and draw on the grid. Select <b>Resume</b> to see the result.</p><p>In v17, the sources at the top use four regular rhythms. “New random world” changes their positions and numbers.</p><details><summary>What do the colors and controls mean?</summary><p><b>Black:</b> reduces influence. <b>Blue and green:</b> turn it left or right. <b>Orange:</b> increases it. <b>Purple:</b> sends some upward while using a stored allowance.</p><p><b>Entity feedback:</b> lets cells change the influence around them. <b>Field:</b> shows the influence map. <b>Mutation:</b> lets local conditions change the type of a new cell. <b>Active:</b> the number of occupied cells. The other measurements and settings are for closer study.</p></details><p><b>Proof of concept:</b> this is an abstract model of feedback and pattern formation. Its influence values are not measurements of water or physical energy.</p></div>
+    <div class="canvasWrap" id="canvasWrap">
+      <canvas id="world" width="980" height="840" aria-label="Influence cellular automaton grid"></canvas>
+      <div class="sourceHitLayer" id="sourceHitLayer" aria-hidden="true"></div>
+      <div class="sourceHover" id="sourceHover" aria-label="Hovered source controls">
+        <div class="sourceHoverTitle"><b id="sourceHoverName">Source</b><span id="sourceHoverCol">col 0</span></div>
+        <div class="sourceSliderRow">
+          <label for="hoverStrength">Strength</label>
+          <input id="hoverStrength" type="range" min="0" max="3" step="0.01" value="0.45">
+          <span class="sourceSliderValue" id="hoverStrengthValue">0.45</span>
+        </div>
+        <div class="sourceSliderRow">
+          <label for="hoverPeriod">Period</label>
+          <input id="hoverPeriod" type="range" min="2" max="120" step="1" value="18">
+          <span class="sourceSliderValue" id="hoverPeriodValue">18</span>
+        </div>
+        <div class="sourceSliderRow">
+          <label for="hoverRandomness">Noise level</label>
+          <input id="hoverRandomness" type="range" min="0" max="1" step="0.01" value="0">
+          <span class="sourceSliderValue" id="hoverRandomnessValue">0.00</span>
+        </div>
+        <div class="sourceHoverHint">Noise level controls enabled stochastic channels. Stable default: 0.00.</div>
+      </div>
+    </div>
+    <div class="sourceNodeHint">Hover a top source node to adjust it. Use <b>Stable sources</b> to reset all sources to the same deterministic forcing.</div>
+    <div class="controls">
+      <button class="btn primary" id="pause">Pause</button>
+      <button class="btn" id="stepOnce">Step once</button>
+      <button class="btn" id="newWorld">New random world</button>
+      <button class="btn" id="replay">Replay same world</button>
+      <button class="btn active" id="couple">Entity feedback: ON</button>
+      <button class="btn active" id="fieldBtn">Field: ON</button>
+      <button class="btn active" id="upBtn">Reflector action: ON</button>
+      <button class="btn" id="mutationBtn">Mutation: OFF</button>
+      <button class="btn" id="stableSourceDefaults">Stable reference</button>
+      <label class="speed">Grid
+        <select id="gridPreset" style="border:1px solid var(--line);border-radius:999px;padding:7px 10px;background:#fff;color:var(--ink);font:600 12px system-ui">
+          <option value="large" selected>Large 48×64</option>
+          <option value="xl">XL 64×90</option>
+          <option value="small">Original 22×28</option>
+        </select>
+      </label>
+      <label class="speed">Speed <input id="speed" type="range" min="0.25" max="8" step="0.25" value="1"><b id="speedOut">1.0×</b></label>
+    </div>
+    <div class="stochbar" aria-label="Stochastic source controls">
+      <span class="stochlabel">Source scale:</span>
+      <select id="sourceScalePreset" class="brushsel" title="Source regime">
+        <option value="hierarchy" selected>Mixed multiscale hierarchy</option>
+        <option value="stable">Stable deterministic reference</option>
+      </select>
+      <span class="stochlabel">Stochastic forcing:</span>
+      <button class="stochbtn" id="stochStrength" type="button">Strength: OFF</button>
+      <button class="stochbtn" id="stochPeriod" type="button">Period: OFF</button>
+      <button class="stochbtn" id="stochTiming" type="button">Timing: OFF</button>
+      <button class="stochbtn entropy" id="entropyRng" type="button">Entropy RNG: OFF</button>
+      <span class="stochhelp">All four source scales coexist. Source count falls geometrically as strength and period rise and noise falls. Seeded stochastic forcing is the default; Entropy RNG remains optional.</span>
+    </div>
+    <div class="paintbar" aria-label="Entity drawing tools">
+      <span class="label">Draw:</span>
+      <button class="paintbtn active" data-paint="1" type="button"><i class="paintdot" style="background:#151515"></i>Absorber</button>
+      <button class="paintbtn" data-paint="2" type="button"><i class="paintdot" style="background:#78c2df"></i>Left</button>
+      <button class="paintbtn" data-paint="3" type="button"><i class="paintdot" style="background:#48cf5b"></i>Right</button>
+      <button class="paintbtn" data-paint="4" type="button"><i class="paintdot" style="background:#efa276"></i>Amplifier</button>
+      <button class="paintbtn" data-paint="5" type="button"><i class="paintdot" style="background:#9a72d8"></i>Reflector</button>
+      <button class="paintbtn" data-paint="0" type="button">Eraser</button>
+      <label class="label">Brush
+        <select class="brushsel" id="brushSize">
+          <option value="1" selected>1 cell</option>
+          <option value="3">3 × 3</option>
+          <option value="5">5 × 5</option>
+        </select>
+      </label>
+      <button class="paintbtn" id="clearEntities" type="button">Clear entities</button>
+      <span class="drawhint">Drag on the grid to paint. Drawing pauses the simulation. The top source row and bottom outlet row are protected.</span>
+    </div>
+    <div class="archivebar" aria-label="Experiment recording tools">
+      <div>
+        <label class="label" for="experimentNotes">Optional experiment notes</label>
+        <textarea id="experimentNotes" placeholder="Example: Hand-drawn two-sided deflector corridor. Deflectors remain after 600 steps; compare with amplifier-reflector dominance."></textarea>
+      </div>
+      <div class="archiveactions">
+        <button class="paintbtn" id="saveStartConfig" type="button">Save as starting config</button>
+        <div class="archiverow">
+          <button class="paintbtn" id="saveStableGif" type="button">Save stable-period GIF</button>
+          <input class="miniinput" id="gifPeriodOverride" type="number" min="2" max="180" step="1" placeholder="Auto period" title="Optional period override in simulation steps">
+        </div>
+        <div class="archiveStatus" id="archiveStatus">Mutation is OFF. GIF history starts after a new world or your latest drawing intervention.</div>
+      </div>
+    </div>
+    <div class="metrics">
+      <div class="metric"><span>Step</span><b id="mStep">0</b></div>
+      <div class="metric"><span>Active entities</span><b id="mActive">0</b></div>
+      <div class="metric"><span>Birth / death</span><b id="mTurn">0 / 0</b></div>
+      <div class="metric"><span>Clustering</span><b id="mCluster">0.000</b></div>
+      <div class="metric"><span>Recent activity</span><b id="mActivity">0%</b></div>
+      <div class="metric"><span>Type diversity</span><b id="mDiversity">0.000</b></div>
+      <div class="metric"><span>Estimated macro period</span><b id="mPeriod">none</b></div>
+      <div class="metric"><span>Period score</span><b id="mPScore">0.000</b></div>
+      <div class="metric"><span>Forcing base period</span><b id="mBasePeriod">0</b></div>
+      <div class="metric"><span>Seam imbalance</span><b id="mSeam">0.000</b></div>
+      <div class="metric"><span>Reflectors</span><b id="mReflectors">0</b></div>
+      <div class="metric"><span>Reflector energy</span><b id="mREnergy">0.000</b></div>
+    </div>
+    <div class="status" id="status" aria-live="polite"></div>
+  </section>
+  <details class="research-details"><summary>Advanced model details and settings</summary><aside class="side">
+    <div class="card">
+      <h2>Stochastic forcing</h2>
+      <p>Three independent source perturbations can be enabled without changing the deterministic default:</p>
+      <ul>
+        <li><b>Strength:</b> step-to-step multiplicative amplitude noise.</li>
+        <li><b>Period:</b> step-to-step effective-period jitter around the selected period.</li>
+        <li><b>Timing:</b> step-to-step phase/timing jitter around the periodic waveform.</li>
+      </ul>
+      <div class="eq">Strength: A*=A(1+rξ)<br>Period: T*=T(1+0.35rξ)<br>Timing: φ*=φ+2π(0.25rξ)</div>
+      <p><b>Entropy RNG</b> uses browser/OS cryptographic entropy and is intentionally non-reproducible. This is not a claim of quantum or physically certified true randomness. With Entropy RNG OFF, the same seed reproduces the same pseudo-random forcing.</p>
+    </div>
+    <div class="card">
+      <h2>Boundary conditions</h2>
+      <ul>
+        <li><b>Top:</b> periodic source boundary.</li>
+        <li><b>Bottom:</b> open outlet.</li>
+        <li><b>Left and right:</b> toroidal wrap.</li>
+      </ul>
+      <p>The new ingredient is a rare Reflector entity. A Reflector can send part of its incoming influence one row upward, but every reflection consumes stored energy. When energy is low, reflection weakens and the Reflector becomes easier to lose.</p>
+      <div class="eq">Top = source<br>Bottom = open outlet<br>Left ↔ Right = torus</div>
+    </div>
+    <div class="card">
+      <h2>Entropy-randomized source realization</h2>
+      <p><b>New random world</b> redraws both source locations and source-type counts using browser/OS cryptographic entropy when available.</p>
+      <div class="eq">E[Nℓ] ∝ 2^-ℓ</div>
+      <p>The realized counts vary around the scaling-law expectation. Strength, period, and noise still follow the source scale. After the counts are drawn, strengths are renormalized so the total nominal source budget remains comparable across worlds.</p>
+      <p><b>Replay same world</b> reuses the exact source realization, including locations, counts, scale classes, strengths, periods, and noise levels.</p>
+      <p>This is entropy-based randomness, not a claim of certified physical or quantum randomness.</p>
+    </div>
+    <div class="card">
+      <h2>Mixed multiscale forcing</h2>
+      <p>All source scales coexist in one world. For hierarchy level ℓ = 0,1,2,3:</p>
+      <div class="eq">Nℓ ≈ N₀ / 2^ℓ<br>Aℓ ∝ 2^ℓ<br>Tℓ = 9 · 2^ℓ<br>rℓ = 0.32 / 2^ℓ</div>
+      <p>After integer source counts are chosen, all amplitudes receive one common normalization factor so the hierarchy has the same nominal summed source strength as the stable reference.</p>
+      <ul>
+        <li><b>F - Fine:</b> common, weak, fast, noisy.</li>
+        <li><b>M - Meso:</b> fewer, stronger, slower.</li>
+        <li><b>C - Coarse:</b> rare, strong determinants.</li>
+        <li><b>L - Macro:</b> very few, strongest, slowest, lowest-noise determinants.</li>
+      </ul>
+      <p>The source waveform is mean-centered, so the periodic cycle does not shut the whole world off:</p>
+      <div class="eq">A(t) = a [1 + 0.40 sin(2πt/T)] × stochastic terms</div>
+      <div class="periods" id="periods"></div>
+    </div>
+    <div class="card">
+      <h2>Entity lexicon</h2>
+      <div class="legend">
+        <div class="leg"><i class="sw" style="background:#151515"></i><span>Absorber</span><b>g=.62, 90°</b></div>
+        <div class="leg"><i class="sw" style="background:#78c2df"></i><span>Left deflector</span><b>g=.90, 58°</b></div>
+        <div class="leg"><i class="sw" style="background:#48cf5b"></i><span>Right deflector</span><b>g=.90, 122°</b></div>
+        <div class="leg"><i class="sw" style="background:#efa276"></i><span>Amplifier</span><b>g=1.12, 90°</b></div>
+        <div class="leg"><i class="sw" style="background:#9a72d8"></i><span>Reflector</span><b>g=.82, ρ↑=.38</b></div>
+      </div>
+      <div class="eq">Reflector only:<br>A↑ = ρ A · energy<br>energy(t+1) = energy + recharge - maintenance - reflection cost</div>
+      <p>Reflectors start rare and are rarely recruited. Their upward feedback is therefore a costly ecological strategy rather than a universal property of every entity.</p>
+    </div>
+    <div class="card">
+      <h2>Field rule</h2>
+      <ul>
+        <li>Main packets propagate downward.</li>
+        <li>Reflective packets are created only at Reflector cells with available energy.</li>
+        <li>Reflected packets move one row up and are then re-propagated downward in a few echo passes.</li>
+        <li>This creates local memory and recirculation.</li>
+      </ul>
+      <div class="eq">E = 1 - exp(-1.15 A)</div>
+    </div>
+    <div class="card">
+      <h2>User-designed initial conditions</h2>
+      <p>You can now construct your own entity configuration directly on the grid. Draw while paused, or start drawing during a run and the simulation will pause automatically.</p>
+      <ul>
+        <li>Paint any of the five v7 entity types.</li>
+        <li>Reflectors drawn by the user receive the standard reflector birth energy.</li>
+        <li>Eraser removes an entity and its stored energy.</li>
+        <li>Brush sizes of 1, 3×3, and 5×5 cells are available.</li>
+        <li>The source row and outlet row cannot be painted.</li>
+      </ul>
+      <p>This changes only the initial or intervened configuration. The v7 survival, birth, feedback, and energy rules are unchanged.</p>
+    </div>
+    <div class="card">
+      <h2>Record manual regimes</h2>
+      <p>Manually drawn configurations can generate outcomes that a random initial condition does not, including cases where Deflectors persist. Use the recorder to preserve those interventions exactly.</p>
+      <ul>
+        <li><b>Starting config JSON:</b> saves every entity cell, viability, Reflector energy, source parameters, rule parameters, current step, and your notes.</li>
+        <li><b>Stable-period GIF:</b> exports the latest detected cycle from a rolling frame history.</li>
+        <li>If automatic period detection is not satisfactory, type a period in simulation steps before saving the GIF.</li>
+      </ul>
+      <p>The GIF uses a built-in encoder, so no external library or internet connection is required.</p>
+    </div>
+    <div class="card">
+      <h2>Stable-state reproduction mode</h2>
+      <p><b>Mutation is OFF by default.</b> In this mode, a newborn inherits one of the entity types already present in its local neighborhood. Environmental direction and exposure can affect whether a birth occurs, but they cannot create a new strategy.</p>
+      <div class="eq">Mutation OFF:<br>new type ∈ neighboring parent types</div>
+      <p>Turn Mutation ON only when you want the earlier evolutionary rule, where exposure/direction can generate Amplifiers and rare spontaneous Reflectors.</p>
+    </div>
+    <div class="card">
+      <h2>Cellular fate rule</h2>
+      <ul>
+        <li><b>Survival:</b> a slightly narrower exposure band and 1 to 4 neighbors.</li>
+        <li><b>Death:</b> viability reaches 0 after repeated unfavorable ticks; Reflectors also suffer when energy is depleted.</li>
+        <li><b>Birth:</b> empty cell, suitable exposure, and 2 to 4 neighbors.</li>
+      </ul>
+    </div>
+  </aside></details>
+</div>
+<script>
+const GRID_PRESETS = {
+  small:{label:"Original 22×28", rows:22, cols:28, sourceCount:7, survivalLow:0.055, survivalHigh:0.90, birthLow:0.26, birthHigh:0.68, attenuation:0.986, initialEntities:42, sourceAmpScale:1.00},
+  large:{label:"Large 48×64", rows:48, cols:64, sourceCount:16, survivalLow:0.045, survivalHigh:0.90, birthLow:0.26, birthHigh:0.62, attenuation:0.994, initialEntities:170, sourceAmpScale:0.90},
+  xl:{label:"XL 64×90", rows:64, cols:90, sourceCount:22, survivalLow:0.045, survivalHigh:0.90, birthLow:0.26, birthHigh:0.62, attenuation:0.996, initialEntities:300, sourceAmpScale:0.90}
+};
+let currentPreset="large";
+const CA_CFG = {
+  ...GRID_PRESETS[currentPreset],
+  survivalNeighborMin:1, survivalNeighborMax:4,
+  birthNeighborMin:2, birthNeighborMax:4,
+  exposureScale:1.15,
+  viabilityMax:2, birthViability:2,
+  routeSigma:0.78,
+  upRouteSigma:0.68,
+  upReflectScale:0.72,
+  upReflectPasses:2,
+  reflectorInitialFraction:0.025,
+  reflectorBirthChance:0.018,
+  reflectorNeighborBirthChance:0.09,
+  reflectorMaxEnergy:1.0,
+  reflectorBirthEnergy:0.58,
+  reflectorInitialEnergyMin:0.45,
+  reflectorInitialEnergyMax:0.95,
+  reflectorRecharge:0.035,
+  reflectorMaintenance:0.018,
+  reflectorCostScale:0.16,
+  reflectorLowEnergy:0.18,
+  periodLexicon:[8,10,12,15,18,24],
+  historyLimit:150,
+  estimateEvery:4,
+  estimateMaxLag:90,
+  seamStrip:3,
+  defaultSourceStrength:0.45,
+  defaultSourcePeriod:18,
+  defaultSourceRandomness:0.00
+};
+function applyPreset(name){currentPreset=name in GRID_PRESETS?name:"large";const p=GRID_PRESETS[currentPreset];for(const [k,v] of Object.entries(p))CA_CFG[k]=v;CA_CFG.estimateMaxLag=currentPreset==='xl'?120:(currentPreset==='large'?90:60);}
+const ENTITY = {
+  1:{name:'Absorber', gain:0.62, rotate:0.00, color:'#151515'},
+  2:{name:'Left deflector', gain:0.90, rotate:-0.35, color:'#78c2df'},
+  3:{name:'Right deflector', gain:0.90, rotate:0.35, color:'#48cf5b'},
+  4:{name:'Amplifier', gain:1.12, rotate:0.00, color:'#efa276'},
+  5:{name:'Reflector', gain:0.82, rotate:0.00, reflectUp:0.38, color:'#9a72d8'}
+};
+const DOWN_OFFSETS=[-2,-1,0,1,2];
+const UP_OFFSETS=[-1,0,1];
+function clamp(x,a,b){return Math.max(a,Math.min(b,x));}
+function mod(n,m){return ((n%m)+m)%m;}
+function mulberry32(seed){let a=seed>>>0;return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+function shuffle(arr,rng){const a=arr.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function sourceNoiseUnit(seed,sourceIndex,step,channel=0){
+  let h=(seed ^ Math.imul(sourceIndex+1,0x9E3779B1) ^ Math.imul(step+1,0x85EBCA77) ^ Math.imul(channel+1,0xC2B2AE3D))>>>0;
+  h=Math.imul(h^(h>>>16),0x7FEB352D)>>>0;
+  h=Math.imul(h^(h>>>15),0x846CA68B)>>>0;
+  h=(h^(h>>>16))>>>0;
+  return h/4294967296;
+}
+function entropyRandomUnit(){
+  try{
+    if(typeof globalThis!=='undefined' && globalThis.crypto && typeof globalThis.crypto.getRandomValues==='function'){
+      const a=new Uint32Array(1); globalThis.crypto.getRandomValues(a); return a[0]/4294967296;
+    }
+  }catch(_){ }
+  return null;
+}
+function entropyUint32(){
+  try{
+    if(typeof globalThis!=='undefined' && globalThis.crypto && typeof globalThis.crypto.getRandomValues==='function'){
+      const a=new Uint32Array(1); globalThis.crypto.getRandomValues(a); return a[0]>>>0;
+    }
+  }catch(_){ }
+  return null;
+}
+function entropyShuffle(arr,fallbackRng){
+  const a=arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const u=entropyRandomUnit();
+    const q=u===null?fallbackRng():u;
+    const j=Math.floor(q*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+function entropyPoisson(lambda,fallbackRng){
+  const L=Math.exp(-Math.max(0.001,lambda));
+  let k=0,p=1;
+  do{
+    k++;
+    const u=entropyRandomUnit();
+    p*=Math.max(1e-12,u===null?fallbackRng():u);
+  }while(p>L && k<512);
+  return Math.max(0,k-1);
+}
+function randomHex32(fallbackRng){
+  const x=entropyUint32();
+  const v=x===null?Math.floor(fallbackRng()*4294967296)>>>0:x;
+  return v.toString(16).padStart(8,'0');
+}
+function gcd(a,b){while(b){const t=a%b;a=b;b=t;}return Math.abs(a);} function lcm(a,b){return Math.abs(a*b)/gcd(a,b);} function lcmArray(a){return a.reduce((x,y)=>lcm(x,y),1);}
+
+const SOURCE_SCALE_PRESETS={
+  stable:{label:"Stable deterministic reference",stochastic:false},
+  hierarchy:{label:"Mixed multiscale hierarchy",stochastic:true}
+};
+const SOURCE_LEVEL_META=[
+  {key:"fine",code:"F",label:"Fine",scale:1},
+  {key:"meso",code:"M",label:"Meso",scale:2},
+  {key:"coarse",code:"C",label:"Coarse",scale:4},
+  {key:"macro",code:"L",label:"Macro",scale:8}
+];
+function hierarchyLevelSpecs(baseCount){
+  const L=SOURCE_LEVEL_META.length;
+  const raw=SOURCE_LEVEL_META.map((meta,level)=>{
+    const count=Math.max(1,Math.round(baseCount/meta.scale));
+    return {
+      ...meta,level,count,
+      rawStrength:CA_CFG.defaultSourceStrength*meta.scale/L,
+      period:Math.max(2,Math.round((CA_CFG.defaultSourcePeriod/2)*meta.scale)),
+      noise:clamp(0.32/meta.scale,0,1)
+    };
+  });
+  const targetBudget=baseCount*CA_CFG.defaultSourceStrength;
+  const rawBudget=raw.reduce((s,x)=>s+x.count*x.rawStrength,0);
+  const norm=rawBudget>0?targetBudget/rawBudget:1;
+  return raw.map(x=>({...x,
+    strength:x.rawStrength*norm,
+    nominalBudget:x.count*x.rawStrength*norm,
+    norm
+  }));
+}
+function randomizedHierarchySpec(baseCount,width,fallbackRng){
+  const expected=hierarchyLevelSpecs(baseCount);
+  let counts=null;
+  let attempts=0;
+  // Independent Poisson counts preserve the 1 : 1/2 : 1/4 : 1/8 law in expectation.
+  // Require at least one source at every scale so the mixed hierarchy remains represented.
+  while(attempts++<40){
+    const candidate=expected.map(x=>Math.max(1,entropyPoisson(x.count,fallbackRng)));
+    const total=candidate.reduce((a,b)=>a+b,0);
+    if(total<=width && total>=Math.max(4,Math.round(expected.reduce((s,x)=>s+x.count,0)*0.55))){
+      counts=candidate;break;
+    }
+  }
+  if(!counts)counts=expected.map(x=>x.count);
+  const targetBudget=baseCount*CA_CFG.defaultSourceStrength;
+  const rawStrengths=SOURCE_LEVEL_META.map(meta=>CA_CFG.defaultSourceStrength*meta.scale/SOURCE_LEVEL_META.length);
+  const rawBudget=counts.reduce((s,n,i)=>s+n*rawStrengths[i],0);
+  const norm=rawBudget>0?targetBudget/rawBudget:1;
+  const levels=expected.map((x,i)=>({
+    ...x,
+    count:counts[i],
+    strength:rawStrengths[i]*norm,
+    nominalBudget:counts[i]*rawStrengths[i]*norm,
+    norm
+  }));
+  return {
+    key:"hierarchy",
+    label:"Mixed multiscale hierarchy",
+    count:counts.reduce((a,b)=>a+b,0),
+    stochastic:true,
+    levels,
+    totalBudget:levels.reduce((s,x)=>s+x.nominalBudget,0)
+  };
+}
+
+function sourceScaleSpec(key,baseCount){
+  if(key!=="hierarchy"){
+    return {
+      key:"stable",label:SOURCE_SCALE_PRESETS.stable.label,
+      count:Math.max(1,Math.round(baseCount)),
+      strength:CA_CFG.defaultSourceStrength,
+      period:CA_CFG.defaultSourcePeriod,
+      noise:0,stochastic:false,levels:[]
+    };
+  }
+  const levels=hierarchyLevelSpecs(baseCount);
+  return {
+    key:"hierarchy",label:SOURCE_SCALE_PRESETS.hierarchy.label,
+    count:levels.reduce((s,x)=>s+x.count,0),
+    strength:null,period:null,noise:null,stochastic:true,
+    levels,
+    totalBudget:levels.reduce((s,x)=>s+x.nominalBudget,0)
+  };
+}
+class InfluenceCA {
+  constructor(seed=91,coupled=true,upReflection=true,mutationEnabled=false,stochasticSettings=null){this.reset(seed,coupled,upReflection,mutationEnabled,stochasticSettings);}
+  idx(r,c){return r*this.W+c;}
+  reset(seed=this.seed||91,coupled=this.coupled!==false,upReflection=this.upReflection!==false,mutationEnabled=this.mutationEnabled===true,stochasticSettings=this.stochastic||null){
+    this.seed=seed>>>0; this.coupled=coupled; this.upReflection=upReflection; this.mutationEnabled=!!mutationEnabled;
+    const st=stochasticSettings||{};
+    this.stochastic={strength:!!st.strength,period:!!st.period,timing:!!st.timing,entropy:!!st.entropy};
+    this.entropyFallbackUsed=false;
+    this.rng=mulberry32(this.seed); this.H=CA_CFG.rows; this.W=CA_CFG.cols; this.N=this.H*this.W; this.stepNo=0;
+    this.types=new Int8Array(this.N); this.viability=new Int8Array(this.N); this.energy=new Float32Array(this.N); this.reflectLoad=new Float32Array(this.N); this.strength=new Float32Array(this.N); this.dir=new Float32Array(this.N); this.exposure=new Float32Array(this.N); this.neighbors=new Int8Array(this.N);
+    this.lastChange={born:0,died:0,turnover:0}; this.turnHistory=[]; this.stateHistory=[]; this.activeHistory=[]; this.lastPeriodEstimate={lag:null,score:0}; this.periodLexicon=CA_CFG.periodLexicon.slice(); this.forcingBasePeriod=lcmArray(this.periodLexicon);
+    // v11 stable default: all sources are identical and synchronized.
+    this.sources=[];
+    for(let k=0;k<CA_CFG.sourceCount;k++){
+      const c=Math.floor((k+0.5)*this.W/CA_CFG.sourceCount)%this.W;
+      this.sources.push({
+        index:k,
+        col:c,
+        period:CA_CFG.defaultSourcePeriod,
+        phase:0,
+        amp:CA_CFG.defaultSourceStrength,
+        randomness:CA_CFG.defaultSourceRandomness,
+        dir:0,
+        current:0,
+        noiseFactor:1,
+        stochasticCacheStep:-1,
+        stochasticCache:{}
+      });
+    }
+    this.recomputeForcingBasePeriod();
+    const used=new Set();
+    while(used.size<CA_CFG.initialEntities){
+      const r=2+Math.floor(this.rng()*(this.H-4)); const c=Math.floor(this.rng()*this.W); const k=this.idx(r,c); if(used.has(k))continue;
+      used.add(k);
+      const isReflector=this.rng()<CA_CFG.reflectorInitialFraction;
+      this.types[k]=isReflector?5:(1+Math.floor(this.rng()*4));
+      this.viability[k]=1+Math.floor(this.rng()*CA_CFG.viabilityMax);
+      if(isReflector)this.energy[k]=CA_CFG.reflectorInitialEnergyMin+(CA_CFG.reflectorInitialEnergyMax-CA_CFG.reflectorInitialEnergyMin)*this.rng();
+    }
+    this.computeField(); this.updateMetrics(); this.activeHistory.push(this.metrics.active); this.recordState();
+  }
+  setCoupled(v){this.coupled=!!v; this.computeField(); this.updateMetrics();}
+  setUpReflection(v){this.upReflection=!!v; this.computeField(); this.updateMetrics();}
+  setMutation(v){this.mutationEnabled=!!v;}
+  setStochasticChannel(name,v){if(name in this.stochastic){this.stochastic[name]=!!v;this.clearSourceStochasticCache();this.recomputeForcingBasePeriod();this.computeField();this.updateMetrics();}}
+  setEntropyRng(v){this.stochastic.entropy=!!v;this.entropyFallbackUsed=false;this.clearSourceStochasticCache();this.computeField();this.updateMetrics();}
+  clearSourceStochasticCache(){for(const s of this.sources||[]){s.stochasticCacheStep=-1;s.stochasticCache={};}}
+  configureSourceScale(key,options=null){
+    const opts=options||{};
+    const keepEntropy=!!(this.stochastic&&this.stochastic.entropy);
+    const fallbackRng=mulberry32((this.seed^0xD17E5A17)>>>0);
+    const replayPlan=opts.plan||null;
+    const randomize=opts.randomize===true;
+    let spec=sourceScaleSpec(key,CA_CFG.sourceCount);
+    this.sources=[];
+
+    if(spec.key==="stable"){
+      const usedCols=new Set();
+      const placeCol=raw=>{
+        let c=mod(Math.round(raw),this.W),guard=0;
+        while(usedCols.has(c)&&guard<this.W){c=mod(c+1,this.W);guard++;}
+        usedCols.add(c);return c;
+      };
+      for(let k=0;k<spec.count;k++){
+        const c=placeCol((k+0.5)*this.W/spec.count);
+        this.sources.push({
+          index:this.sources.length,col:c,period:spec.period,phase:0,amp:spec.strength,
+          randomness:0,dir:0,current:0,noiseFactor:1,
+          scaleLevel:null,scaleKey:"stable",scaleCode:"S",scaleLabel:"Stable",
+          stochasticCacheStep:-1,stochasticCache:{}
+        });
+      }
+      this.sourceRealizationId="stable";
+      this.sourceLayoutEntropyFallback=false;
+      this.stochastic={strength:false,period:false,timing:false,entropy:false};
+      this.entropyFallbackUsed=false;
+    }else if(replayPlan && Array.isArray(replayPlan.sources)){
+      this.sourceRealizationId=replayPlan.id||"replay";
+      this.sourceLayoutEntropyFallback=!!replayPlan.entropyFallback;
+      this.sources=replayPlan.sources.map((s,i)=>({
+        index:i,col:s.col,period:s.period,phase:s.phase||0,amp:s.amp,
+        randomness:s.randomness||0,dir:s.dir||0,current:0,noiseFactor:1,
+        scaleLevel:s.scaleLevel,scaleKey:s.scaleKey,scaleCode:s.scaleCode,scaleLabel:s.scaleLabel,
+        stochasticCacheStep:-1,stochasticCache:{}
+      }));
+      this.stochastic={strength:true,period:true,timing:true,entropy:keepEntropy};
+      spec={
+        key:"hierarchy",label:SOURCE_SCALE_PRESETS.hierarchy.label,count:this.sources.length,
+        stochastic:true,totalBudget:this.sources.reduce((s,x)=>s+x.amp,0),
+        levels:SOURCE_LEVEL_META.map(meta=>{
+          const a=this.sources.filter(s=>s.scaleKey===meta.key);
+          return {
+            ...meta,count:a.length,
+            strength:a.length?a[0].amp:0,
+            period:a.length?a[0].period:Math.max(2,Math.round((CA_CFG.defaultSourcePeriod/2)*meta.scale)),
+            noise:a.length?a[0].randomness:clamp(0.32/meta.scale,0,1),
+            nominalBudget:a.reduce((s,x)=>s+x.amp,0)
+          };
+        })
+      };
+    }else{
+      spec=randomize?randomizedHierarchySpec(CA_CFG.sourceCount,this.W,fallbackRng):sourceScaleSpec("hierarchy",CA_CFG.sourceCount);
+      const cols=entropyShuffle(Array.from({length:this.W},(_,i)=>i),fallbackRng);
+      const entropyAvailable=entropyRandomUnit()!==null;
+      this.sourceLayoutEntropyFallback=!entropyAvailable;
+      this.sourceRealizationId=randomize?randomHex32(fallbackRng):"fixed";
+      let ci=0;
+      const sourceTypes=[];
+      for(const level of spec.levels)for(let k=0;k<level.count;k++)sourceTypes.push(level);
+      const shuffledTypes=randomize?entropyShuffle(sourceTypes,fallbackRng):sourceTypes;
+      for(const level of shuffledTypes){
+        const c=cols[ci++%cols.length];
+        this.sources.push({
+          index:this.sources.length,col:c,period:level.period,phase:0,amp:level.strength,
+          randomness:level.noise,dir:0,current:0,noiseFactor:1,
+          scaleLevel:level.level,scaleKey:level.key,scaleCode:level.code,scaleLabel:level.label,
+          stochasticCacheStep:-1,stochasticCache:{}
+        });
+      }
+      this.stochastic={strength:true,period:true,timing:true,entropy:keepEntropy};
+    }
+
+    this.sourceScalePreset=spec.key;
+    this.currentSourceSpec=spec;
+    this.recomputeForcingBasePeriod();
+    this.computeField();
+    this.updateMetrics();
+    return spec;
+  }
+  exportSourcePlan(){
+    return {
+      id:this.sourceRealizationId||"unknown",
+      entropyFallback:!!this.sourceLayoutEntropyFallback,
+      sources:this.sources.map(s=>({
+        col:s.col,period:s.period,phase:s.phase||0,amp:s.amp,randomness:s.randomness||0,dir:s.dir||0,
+        scaleLevel:s.scaleLevel,scaleKey:s.scaleKey,scaleCode:s.scaleCode,scaleLabel:s.scaleLabel
+      }))
+    };
+  }
+  sourceRandomUnit(s,t,channel){
+    if(!this.stochastic.entropy)return sourceNoiseUnit(this.seed,s.index??0,t,channel);
+    if(s.stochasticCacheStep!==t){s.stochasticCacheStep=t;s.stochasticCache={};}
+    if(Object.prototype.hasOwnProperty.call(s.stochasticCache,channel))return s.stochasticCache[channel];
+    const q=entropyRandomUnit();
+    if(q===null){this.entropyFallbackUsed=true;const p=sourceNoiseUnit(this.seed,s.index??0,t,channel);s.stochasticCache[channel]=p;return p;}
+    s.stochasticCache[channel]=q;return q;
+  }
+  paintCell(r,c,typ){
+    if(r<=0||r>=this.H-1)return false;
+    c=mod(c,this.W);
+    const k=this.idx(r,c);
+    const t=clamp(Math.round(typ),0,5);
+    this.types[k]=t;
+    if(t===0){
+      this.viability[k]=0;
+      this.energy[k]=0;
+      this.reflectLoad[k]=0;
+    }else{
+      this.viability[k]=CA_CFG.viabilityMax;
+      this.energy[k]=t===5?CA_CFG.reflectorBirthEnergy:0;
+      this.reflectLoad[k]=0;
+    }
+    return true;
+  }
+  refreshAfterPaint(){
+    this.computeField();
+    this.updateMetrics();
+  }
+  recomputeForcingBasePeriod(){
+    const stochasticActive=this.stochastic && (this.stochastic.strength||this.stochastic.period||this.stochastic.timing);
+    if(stochasticActive && this.sources.some(s=>(s.randomness||0)>0)){
+      this.forcingBasePeriod='stochastic';
+      return this.forcingBasePeriod;
+    }
+    let p=1;
+    for(const s of this.sources){
+      const q=Math.max(2,Math.round(s.period));
+      p=lcm(p,q);
+      if(!Number.isFinite(p)||p>1000000){this.forcingBasePeriod='>1e6';return this.forcingBasePeriod;}
+    }
+    this.forcingBasePeriod=p;
+    return p;
+  }
+  sourceAmplitude(s,t=this.stepNo){
+    const nominalPeriod=Math.max(2,Number(s.period)||CA_CFG.defaultSourcePeriod);
+    const amp=Math.max(0,Number(s.amp)||0);
+    if(amp<=0){s.noiseFactor=1;s.effectivePeriod=nominalPeriod;s.timingJitter=0;return 0;}
+    const r=clamp(Number(s.randomness)||0,0,1);
+    const signed=channel=>this.sourceRandomUnit(s,t,channel)*2-1;
+
+    const periodJitter=(this.stochastic.period&&r>0)?0.35*r*signed(2):0;
+    const effectivePeriod=Math.max(2,nominalPeriod*(1+periodJitter));
+    const timingJitter=(this.stochastic.timing&&r>0)?2*Math.PI*0.25*r*signed(3):0;
+    const periodic=amp*(1+0.40*Math.sin(2*Math.PI*t/effectivePeriod+(s.phase||0)+timingJitter));
+
+    const strengthFactor=(this.stochastic.strength&&r>0)?Math.max(0,1+r*signed(1)):1;
+    s.noiseFactor=strengthFactor; s.effectivePeriod=effectivePeriod; s.timingJitter=timingJitter;
+    return Math.max(0,periodic*strengthFactor);
+  }
+  propagatePacket(totalS,totalDnum, packetS, packetDnum){
+    const W=this.W,H=this.H;
+    let curS=packetS, curD=packetDnum;
+    for(let r=0;r<H-1;r++){
+      const nextS=new Float32Array(W), nextD=new Float32Array(W);
+      for(let c=0;c<W;c++){
+        const a=curS[c]; if(a<1e-10)continue;
+        const k=this.idx(r,c), typ=this.types[k], e=typ?ENTITY[typ]:null;
+        const gain=(this.coupled&&e)?e.gain:1, rot=(this.coupled&&e)?e.rotate:0;
+        const out=a*gain*CA_CFG.attenuation; const h=a>1e-10?curD[c]/a:0; const ho=clamp(h+rot,-1,1); const mu=ho*1.6;
+        let den=0; const ws=[];
+        for(const off of DOWN_OFFSETS){const w=Math.exp(-0.5*Math.pow((off-mu)/CA_CFG.routeSigma,2)); ws.push(w); den+=w;}
+        for(let z=0;z<DOWN_OFFSETS.length;z++){
+          const cc=mod(c+DOWN_OFFSETS[z],W); const q=out*ws[z]/den; const nk=this.idx(r+1,cc);
+          totalS[nk]+=q; totalDnum[nk]+=q*ho; nextS[cc]+=q; nextD[cc]+=q*ho;
+        }
+      }
+      curS=nextS; curD=nextD;
+    }
+  }
+  propagatePackets(totalS,totalDnum,packetS,packetDnum){
+    const H=this.H,W=this.W;
+    for(let r=0;r<H-1;r++){
+      for(let c=0;c<W;c++){
+        const k=this.idx(r,c),a=packetS[k]; if(a<1e-10)continue;
+        const typ=this.types[k], e=typ?ENTITY[typ]:null;
+        const gain=(this.coupled&&e)?e.gain:1, rot=(this.coupled&&e)?e.rotate:0;
+        const out=a*gain*CA_CFG.attenuation;
+        const h=a>1e-10?packetDnum[k]/a:0, ho=clamp(h+rot,-1,1), mu=ho*1.6;
+        let den=0; const ws=[];
+        for(const off of DOWN_OFFSETS){const w=Math.exp(-0.5*Math.pow((off-mu)/CA_CFG.routeSigma,2));ws.push(w);den+=w;}
+        for(let z=0;z<DOWN_OFFSETS.length;z++){
+          const cc=mod(c+DOWN_OFFSETS[z],W),q=out*ws[z]/den,nk=this.idx(r+1,cc);
+          packetS[nk]+=q;packetDnum[nk]+=q*ho;totalS[nk]+=q;totalDnum[nk]+=q*ho;
+        }
+      }
+    }
+  }
+  computeField(){
+    const H=this.H,W=this.W,totalS=new Float32Array(this.N),totalDnum=new Float32Array(this.N);
+    this.reflectLoad.fill(0);
+    const packets=new Float32Array(this.N),packetD=new Float32Array(this.N);
+    for(const s of this.sources){
+      const a=this.sourceAmplitude(s);s.current=a;const c=s.col,k=this.idx(0,c);
+      packets[k]+=a;packetD[k]+=a*s.dir;totalS[k]+=a;totalDnum[k]+=a*s.dir;
+      for(const dc of [-1,1]){const cc=mod(c+dc,W),nk=this.idx(0,cc),q=0.12*a;packets[nk]+=q;packetD[nk]+=q*s.dir;totalS[nk]+=q;totalDnum[nk]+=q*s.dir;}
+    }
+    this.propagatePackets(totalS,totalDnum,packets,packetD);
+    if(this.coupled && this.upReflection){
+      for(let pass=0;pass<CA_CFG.upReflectPasses;pass++){
+        const echoS=new Float32Array(this.N),echoD=new Float32Array(this.N);
+        let any=false;
+        for(let r=1;r<H;r++)for(let c=0;c<W;c++){
+          const k=this.idx(r,c); if(this.types[k]!==5)continue;
+          const e=ENTITY[5], available=clamp(this.energy[k]/CA_CFG.reflectorMaxEnergy,0,1);
+          if(available<=0.02)continue;
+          const incoming=totalS[k]; if(incoming<1e-8)continue;
+          const reflected=incoming*e.reflectUp*CA_CFG.upReflectScale*available/CA_CFG.upReflectPasses;
+          if(reflected<1e-8)continue;
+          this.reflectLoad[k]+=reflected; any=true;
+          const h=totalS[k]>1e-9?totalDnum[k]/totalS[k]:0, mu=h*0.55;
+          let den=0;const ws=[];for(const off of UP_OFFSETS){const w=Math.exp(-0.5*Math.pow((off-mu)/CA_CFG.upRouteSigma,2));ws.push(w);den+=w;}
+          for(let z=0;z<UP_OFFSETS.length;z++){
+            const rr=r-1,cc=mod(c+UP_OFFSETS[z],W),nk=this.idx(rr,cc),q=reflected*ws[z]/den;
+            echoS[nk]+=q;echoD[nk]+=q*h;totalS[nk]+=q;totalDnum[nk]+=q*h;
+          }
+        }
+        if(!any)break;
+        this.propagatePackets(totalS,totalDnum,echoS,echoD);
+      }
+    }
+    this.strength=totalS;
+    for(let k=0;k<this.N;k++)this.dir[k]=totalS[k]>1e-9?totalDnum[k]/totalS[k]:0;
+    for(let k=0;k<this.N;k++)this.exposure[k]=1-Math.exp(-totalS[k]*CA_CFG.exposureScale);
+  }
+  countNeighbors(types=this.types){
+    const H=this.H,W=this.W,n=this.neighbors; n.fill(0);
+    for(let r=0;r<H;r++)for(let c=0;c<W;c++){
+      let q=0;
+      for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){
+        if(dr===0&&dc===0)continue; const rr=r+dr; if(rr<0||rr>=H)continue; const cc=mod(c+dc,W); if(types[this.idx(rr,cc)]>0)q++;
+      }
+      n[this.idx(r,c)] = q;
+    }
+    return n;
+  }
+  majorityNeighborType(r,c,types){
+    const count=[0,0,0,0,0,0];
+    for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){
+      if(dr===0&&dc===0)continue; const rr=r+dr; if(rr<0||rr>=this.H)continue; const cc=mod(c+dc,this.W); const t=types[this.idx(rr,cc)]; if(t)count[t]++;
+    }
+    let mx=0; for(let t=1;t<=5;t++)mx=Math.max(mx,count[t]); if(mx===0)return 4;
+    const tied=[]; for(let t=1;t<=5;t++) if(count[t]===mx) tied.push(t);
+    const h=(Math.imul(this.seed,1103515245)+Math.imul(r+1,73856093)+Math.imul(c+1,19349663)+Math.imul(this.stepNo+1,83492791))>>>0;
+    return tied[h%tied.length];
+  }
+  chooseBirthType(r,c,types,E,D){
+    // Stable-state mode: no new strategy may appear unless it is already
+    // represented among the neighboring parents.
+    if(!this.mutationEnabled){
+      return this.majorityNeighborType(r,c,types);
+    }
+
+    // Evolutionary mode retained from v7/v9.
+    let reflectorNeighbors=0;
+    for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){
+      if(!dr&&!dc)continue;
+      const rr=r+dr;
+      if(rr<0||rr>=this.H)continue;
+      const cc=mod(c+dc,this.W);
+      if(types[this.idx(rr,cc)]===5)reflectorNeighbors++;
+    }
+    const h=(Math.imul(this.seed^0x9e3779b9,1664525)+Math.imul(r+3,2246822519)+Math.imul(c+7,3266489917)+Math.imul(this.stepNo+11,668265263))>>>0;
+    const u=h/4294967296;
+    const p=reflectorNeighbors>0?CA_CFG.reflectorNeighborBirthChance:CA_CFG.reflectorBirthChance;
+    if(E>0.24&&E<0.66&&u<p)return 5;
+
+    let typ=this.majorityNeighborType(r,c,types);
+    if(typ===5)typ=4;
+    if(D<-0.18)typ=2;
+    else if(D>0.18)typ=3;
+    else if(E>0.70)typ=1;
+    else if(Math.abs(D)<0.08&&E<0.56)typ=4;
+    return typ;
+  }
+  recordState(){ this.stateHistory.push(Uint8Array.from(this.types)); if(this.stateHistory.length>CA_CFG.historyLimit)this.stateHistory.shift(); }
+  estimatePeriod(){
+    const h=this.activeHistory, L=Math.min(180,h.length); if(L<60)return {lag:null,score:0}; const y=h.slice(h.length-L).map(Number), n=y.length;
+    let sx=0,sy=0,sxx=0,sxy=0; for(let i=0;i<n;i++){sx+=i;sy+=y[i];sxx+=i*i;sxy+=i*y[i];}
+    const den=n*sxx-sx*sx, slope=den?(n*sxy-sx*sy)/den:0, intercept=(sy-slope*sx)/n;
+    const z=y.map((v,i)=>v-(slope*i+intercept)); const mean=z.reduce((a,b)=>a+b,0)/n; for(let i=0;i<n;i++)z[i]-=mean; let energy=0; for(const v of z)energy+=v*v; if(energy<1e-9)return {lag:null,score:0};
+    const maxLag=Math.min(CA_CFG.estimateMaxLag,Math.floor(n/2)); const vals=[];
+    for(let lag=4;lag<=maxLag;lag++){ let num=0; for(let i=0;i<n-lag;i++)num+=z[i]*z[i+lag]; vals.push({lag,score:num/energy}); }
+    let best=null; for(let i=1;i<vals.length-1;i++){ const q=vals[i]; if(q.score>vals[i-1].score && q.score>=vals[i+1].score && (!best||q.score>best.score))best=q; }
+    if(!best||best.score<0.45)return {lag:null,score:best?best.score:0}; return best;
+  }
+  step(){
+    this.computeField(); const H=this.H,W=this.W,E=this.exposure,D=this.dir,old=this.types; this.countNeighbors(old); const types=Int8Array.from(old),health=Int8Array.from(this.viability),energy=Float32Array.from(this.energy); let died=0;
+    for(let r=0;r<H;r++)for(let c=0;c<W;c++){
+      const k=this.idx(r,c); if(!old[k])continue; const n=this.neighbors[k];
+      let favorable=E[k]>=CA_CFG.survivalLow&&E[k]<=CA_CFG.survivalHigh&&n>=CA_CFG.survivalNeighborMin&&n<=CA_CFG.survivalNeighborMax;
+      if(old[k]===5){
+        const recharge=CA_CFG.reflectorRecharge*clamp((E[k]-0.08)/0.55,0,1);
+        const cost=CA_CFG.reflectorMaintenance+CA_CFG.reflectorCostScale*Math.min(1,this.reflectLoad[k]);
+        energy[k]=clamp(energy[k]+recharge-cost,0,CA_CFG.reflectorMaxEnergy);
+        if(energy[k]<CA_CFG.reflectorLowEnergy)favorable=false;
+      }
+      if(favorable)health[k]=Math.min(CA_CFG.viabilityMax,health[k]+1); else health[k]-=1;
+      if(health[k]<=0){types[k]=0;health[k]=0;energy[k]=0;died++;}
+    }
+    this.countNeighbors(types); let born=0;
+    for(let r=1;r<H-1;r++)for(let c=0;c<W;c++){
+      const k=this.idx(r,c); if(types[k])continue; const n=this.neighbors[k]; const ok=E[k]>=CA_CFG.birthLow&&E[k]<=CA_CFG.birthHigh&&n>=CA_CFG.birthNeighborMin&&n<=CA_CFG.birthNeighborMax; if(!ok)continue;
+      const typ=this.chooseBirthType(r,c,types,E[k],D[k]); types[k]=typ; health[k]=CA_CFG.birthViability; if(typ===5)energy[k]=CA_CFG.reflectorBirthEnergy; born++;
+    }
+    this.types=types; this.viability=health; this.energy=energy; this.stepNo++; this.lastChange={born,died,turnover:born+died}; this.turnHistory.push(born+died); if(this.turnHistory.length>80)this.turnHistory.shift();
+    this.computeField(); this.updateMetrics(); this.activeHistory.push(this.metrics.active); if(this.activeHistory.length>240)this.activeHistory.shift(); this.recordState(); if(this.stepNo%CA_CFG.estimateEvery===0)this.lastPeriodEstimate=this.estimatePeriod(); return this.lastChange;
+  }
+  updateMetrics(){
+    this.countNeighbors(this.types); let active=0,ns=0,meanE=0,leftStrip=0,rightStrip=0; const counts=[0,0,0,0,0,0], strip=CA_CFG.seamStrip; let reflectorEnergy=0;
+    for(let r=0;r<this.H;r++)for(let c=0;c<this.W;c++){
+      const k=this.idx(r,c); if(!this.types[k])continue; active++; ns+=this.neighbors[k]; meanE+=this.exposure[k]; counts[this.types[k]]++; if(this.types[k]===5)reflectorEnergy+=this.energy[k]; if(c<strip)leftStrip++; if(c>=this.W-strip)rightStrip++;
+    }
+    const recent=this.turnHistory.slice(-40), activity=recent.length?recent.filter(x=>x>0).length/recent.length:0; let entropy=0;
+    if(active){ for(let t=1;t<=5;t++) if(counts[t]){ const p=counts[t]/active; entropy-=p*Math.log(p); } entropy/=Math.log(5); }
+    this.metrics={active,clustering:active?ns/(active*8):0,meanExposure:active?meanE/active:0,lateActivity:activity,typeDiversity:entropy,counts,seamImbalance:active?(rightStrip-leftStrip)/active:0,reflectorCount:counts[5],meanReflectorEnergy:counts[5]?reflectorEnergy/counts[5]:0};
+  }
+  status(){ const m=this.metrics; if(m.active===0)return 'Extinction attractor'; if(this.stepNo<15)return 'Transient selection'; if(this.stepNo<40)return 'Reconfiguration'; if(this.lastPeriodEstimate.lag&&this.lastPeriodEstimate.score>0.90)return 'Periodic patterned regime'; if(m.lateActivity>0.55)return 'Metastable dynamic regime'; if(m.lateActivity<0.15)return 'Near static attractor'; return 'Adaptive patterned regime'; }
+}
+const canvas=document.getElementById('world'),ctx=canvas.getContext('2d'); applyPreset(currentPreset);
+let world=new InfluenceCA(91,true,true,false,{strength:false,period:false,timing:false,entropy:false}), paused=false, showField=true, speed=1, acc=0, last=performance.now(); let currentSourceScalePreset='hierarchy'; const tickSec=.70; let particles=[];
+let paintType=1, brushSize=1, drawing=false, lastPaintKey='';
+const GIF_CAPTURE_W=320;
+const GIF_CAPTURE_H=Math.round(GIF_CAPTURE_W*canvas.height/canvas.width);
+const GIF_HISTORY_LIMIT=180;
+const gifCaptureCanvas=document.createElement('canvas');
+gifCaptureCanvas.width=GIF_CAPTURE_W; gifCaptureCanvas.height=GIF_CAPTURE_H;
+const gifCaptureCtx=gifCaptureCanvas.getContext('2d',{willReadFrequently:true});
+let gifHistory=[];
+
+
+function layout(){const W=world.W,H=world.H,pad=34,sourceH=44;const cw=(canvas.width-pad*2)/W,ch=(canvas.height-pad-sourceH-18)/H;const cell=Math.min(cw,ch),gridW=cell*W,gridH=cell*H;return {cell,left:(canvas.width-gridW)/2,top:sourceH+8,width:gridW,height:gridH};}
+function sourceX(s,L){return L.left+(s.col+.5)*L.cell;}
+function respawn(p){const s=world.sources[Math.floor(Math.random()*world.sources.length)];p.x=s.col+.5+(Math.random()-.5)*.3;p.y=-.5-Math.random()*1.5;p.vy=1;p.life=0;return p;}
+function resetParticles(){particles=[];const n=currentPreset==='xl'?430:(currentPreset==='large'?360:260);for(let i=0;i<n;i++)particles.push(respawn({}));}
+function sampleCell(x,y){const c=mod(Math.floor(x),world.W),r=clamp(Math.floor(y),0,world.H-1),k=world.idx(r,c);return {h:world.dir[k],a:world.strength[k],type:world.types[k]};}
+function updateParticles(dt){
+  for(const p of particles){
+    p.px=p.x; p.py=p.y; const s=sampleCell(p.x,p.y); const e=s.type?ENTITY[s.type]:null;
+    p.x=mod(p.x+s.h*2.2*dt,world.W);
+    p.y += 3.2*dt*p.vy;
+    if(world.upReflection && s.type===5 && e && Math.random()<e.reflectUp*0.10*clamp(world.energy[world.idx(clamp(Math.floor(p.y),0,world.H-1),mod(Math.floor(p.x),world.W))],0,1) && p.y>1 && p.y<world.H-2){ p.y -= 1.2*dt*(2+e.reflectUp*5); }
+    p.life += dt;
+    if(p.y>world.H+1||p.life>12)respawn(p);
+  }
+}
+function drawArrow(x,y,len,angle,color,width=1){ctx.save();ctx.translate(x,y);ctx.rotate(angle);ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,len);ctx.stroke();ctx.beginPath();ctx.moveTo(0,len);ctx.lineTo(-3*width,len-5*width);ctx.lineTo(3*width,len-5*width);ctx.closePath();ctx.fill();ctx.restore();}
+function draw(){
+  const L=layout(),cell=L.cell;ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.font='12px ui-monospace,monospace';ctx.textAlign='center';ctx.textBaseline='middle';
+  for(const s of world.sources){
+    const x=sourceX(s,L),a=s.amp>0?clamp(s.current/(s.amp*1.4),0,1):0;
+    const lvl=Number.isInteger(s.scaleLevel)?s.scaleLevel:1;
+    const baseR=s.scaleKey==='stable'?6:(3.8+1.7*lvl);
+    ctx.strokeStyle='rgba(49,119,158,.28)';ctx.beginPath();ctx.moveTo(x,L.top-30);ctx.lineTo(x,L.top-4);ctx.stroke();
+    ctx.beginPath();ctx.arc(x,L.top-33,baseR+4.5*a,0,Math.PI*2);
+    ctx.fillStyle=`rgba(70,155,197,${clamp(.22+.13*lvl+.38*a,.2,.9)})`;ctx.fill();
+    ctx.fillStyle='#52636b';ctx.font='10px ui-monospace,monospace';ctx.fillText(s.scaleCode||'S',x,L.top-33);
+  }
+  if(showField){ let max=0; for(const v of world.strength) if(v>max) max=v; for(let r=0;r<world.H;r++) for(let c=0;c<world.W;c++){ const k=world.idx(r,c),q=max?world.strength[k]/max:0; if(q<.02)continue; const x=L.left+c*cell,y=L.top+r*cell; ctx.fillStyle=`rgba(79,169,210,${.015+.16*Math.pow(q,.55)})`; ctx.fillRect(x,y,cell,cell); if((r+c)%2===0&&q>.08){ const theta=world.dir[k]*.65; drawArrow(x+cell*.5,y+cell*.26,cell*.40,theta,'rgba(46,120,157,.28)',Math.max(.55,cell*.035)); } } }
+  ctx.strokeStyle='rgba(24,29,32,.28)';ctx.lineWidth=1;ctx.beginPath();for(let c=0;c<=world.W;c++){const x=L.left+c*cell;ctx.moveTo(x,L.top);ctx.lineTo(x,L.top+L.height);}for(let r=0;r<=world.H;r++){const y=L.top+r*cell;ctx.moveTo(L.left,y);ctx.lineTo(L.left+L.width,y);}ctx.stroke();
+  if(showField){ ctx.lineCap='round'; for(const p of particles){ let x1=L.left+(p.px||p.x)*cell,y1=L.top+(p.py||p.y)*cell,x2=L.left+p.x*cell,y2=L.top+p.y*cell; if(y2<L.top-2||y2>L.top+L.height+2)continue; if(Math.abs(x2-x1)>L.width/2){ if(x2>x1)x1+=L.width; else x2+=L.width; } ctx.strokeStyle='rgba(65,151,194,.34)'; ctx.lineWidth=Math.max(.7,cell*.035); ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); } }
+  for(let r=0;r<world.H;r++)for(let c=0;c<world.W;c++){
+    const k=world.idx(r,c),typ=world.types[k]; if(!typ)continue; const x=L.left+c*cell,y=L.top+r*cell,e=ENTITY[typ]; ctx.fillStyle=e.color; ctx.fillRect(x+1,y+1,cell-2,cell-2); if(world.viability[k]===1){ctx.fillStyle='rgba(255,255,255,.36)';ctx.fillRect(x+1,y+1,cell-2,cell-2);} const deg=(90+e.rotate*90)*Math.PI/180; drawArrow(x+cell*.5,y+cell*.30,cell*.38,deg-Math.PI/2,typ===1?'#fff':'rgba(20,25,28,.70)',Math.max(.65,cell*.045)); if(world.upReflection && typ===5){ ctx.globalAlpha=.35+.65*clamp(world.energy[k],0,1); ctx.strokeStyle='rgba(255,255,255,.65)'; ctx.lineWidth=Math.max(.7,cell*.04); ctx.beginPath(); ctx.moveTo(x+cell*.5,y+cell*.18); ctx.lineTo(x+cell*.5,y+cell*.05); ctx.lineTo(x+cell*.42,y+cell*.12); ctx.moveTo(x+cell*.5,y+cell*.05); ctx.lineTo(x+cell*.58,y+cell*.12); ctx.stroke(); ctx.globalAlpha=1; }
+  }
+}
+
+function archiveMessage(msg){
+  const el=document.getElementById('archiveStatus');
+  if(el)el.textContent=msg;
+}
+function safeStamp(){
+  return new Date().toISOString().replace(/[:.]/g,'-');
+}
+function downloadBlob(blob,name){
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=name; a.style.display='none';
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},1200);
+}
+function entityCounts(){
+  const counts=[0,0,0,0,0,0];
+  for(const t of world.types)if(t>=0&&t<counts.length)counts[t]++;
+  return {
+    empty:counts[0], absorber:counts[1], leftDeflector:counts[2],
+    rightDeflector:counts[3], amplifier:counts[4], reflector:counts[5]
+  };
+}
+function startingConfigurationObject(){
+  return {
+    schema:'gongjing-adaptive-influence-start-config-v1',
+    applicationVersion:'v17-entropy-random-worlds',
+    savedAt:new Date().toISOString(),
+    notes:document.getElementById('experimentNotes').value || '',
+    gridPreset:currentPreset,
+    grid:{rows:world.H,cols:world.W},
+    seed:world.seed,
+    step:world.stepNo,
+    entityFeedback:world.coupled,
+    reflectorAction:world.upReflection,
+    mutationEnabled:world.mutationEnabled,
+    entityCounts:entityCounts(),
+    estimatedMacroPeriod:world.lastPeriodEstimate.lag,
+    periodScore:world.lastPeriodEstimate.score,
+    forcingBasePeriod:world.forcingBasePeriod,
+    stochasticForcing:JSON.parse(JSON.stringify(world.stochastic)),
+    sourceScalePreset:world.sourceScalePreset||'stable',
+    sourceRealizationId:world.sourceRealizationId||'unknown',
+    sourceLayoutEntropyFallback:!!world.sourceLayoutEntropyFallback,
+    sourceRealizedCounts:Object.fromEntries(SOURCE_LEVEL_META.map(m=>[m.key,world.sources.filter(s=>s.scaleKey===m.key).length])),
+    entropyFallbackUsed:world.entropyFallbackUsed,
+    sourceWaveform:{type:'mean-centered sinusoid',modulationDepth:0.40,defaultStrength:CA_CFG.defaultSourceStrength},
+    rules:JSON.parse(JSON.stringify(CA_CFG)),
+    entityLexicon:JSON.parse(JSON.stringify(ENTITY)),
+    sources:world.sources.map((s,i)=>({
+      source:i+1,col:s.col,period:s.period,effectivePeriod:s.effectivePeriod||s.period,phase:s.phase,timingJitter:s.timingJitter||0,amp:s.amp,randomness:s.randomness||0,dir:s.dir,current:s.current,noiseFactor:s.noiseFactor||1
+    })),
+    types:Array.from(world.types),
+    viability:Array.from(world.viability),
+    reflectorEnergy:Array.from(world.energy),
+    reflectorLoad:Array.from(world.reflectLoad)
+  };
+}
+function saveStartingConfiguration(){
+  const obj=startingConfigurationObject();
+  const blob=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'});
+  const name=`gongjing_start_${currentPreset}_seed${world.seed}_step${world.stepNo}_${safeStamp()}.json`;
+  downloadBlob(blob,name);
+  archiveMessage(`Saved exact configuration at step ${world.stepNo}. Notes included: ${obj.notes.trim()?'yes':'no'}.`);
+}
+function resetGifHistory(reason=''){
+  gifHistory=[];
+  archiveMessage(reason?`${reason} GIF frame history reset.`:'GIF frame history reset.');
+}
+function rgb332(r,g,b){return ((r>>5)<<5)|((g>>5)<<2)|(b>>6);}
+function captureGifFrame(){
+  gifCaptureCtx.clearRect(0,0,GIF_CAPTURE_W,GIF_CAPTURE_H);
+  gifCaptureCtx.drawImage(canvas,0,0,GIF_CAPTURE_W,GIF_CAPTURE_H);
+  // Add a small step label inside the archived frame.
+  gifCaptureCtx.fillStyle='rgba(255,255,255,.82)';
+  gifCaptureCtx.fillRect(4,4,88,17);
+  gifCaptureCtx.fillStyle='#263238';
+  gifCaptureCtx.font='10px ui-monospace,monospace';
+  gifCaptureCtx.textAlign='left';
+  gifCaptureCtx.textBaseline='middle';
+  gifCaptureCtx.fillText(`step ${world.stepNo}`,8,12);
+  const rgba=gifCaptureCtx.getImageData(0,0,GIF_CAPTURE_W,GIF_CAPTURE_H).data;
+  const indexed=new Uint8Array(GIF_CAPTURE_W*GIF_CAPTURE_H);
+  for(let i=0,j=0;i<rgba.length;i+=4,j++)indexed[j]=rgb332(rgba[i],rgba[i+1],rgba[i+2]);
+  gifHistory.push({step:world.stepNo,pixels:indexed});
+  if(gifHistory.length>GIF_HISTORY_LIMIT)gifHistory.shift();
+  archiveMessage(`GIF history: ${gifHistory.length} simulation frames. Detected period: ${world.lastPeriodEstimate.lag||'none'}.`);
+}
+function gifPalette332(){
+  const p=new Uint8Array(256*3);
+  for(let i=0;i<256;i++){
+    const r=(i>>5)&7, g=(i>>2)&7, b=i&3;
+    p[i*3]=Math.round(r*255/7);
+    p[i*3+1]=Math.round(g*255/7);
+    p[i*3+2]=Math.round(b*255/3);
+  }
+  return p;
+}
+function gifLzwEncode(indices,minCodeSize=8){
+  const clear=1<<minCodeSize, end=clear+1;
+  let codeSize=minCodeSize+1, nextCode=end+1;
+  let dict=new Map(), bytes=[], bitBuffer=0, bitCount=0;
+  function writeCode(code){
+    bitBuffer |= code<<bitCount;
+    bitCount += codeSize;
+    while(bitCount>=8){
+      bytes.push(bitBuffer&255);
+      bitBuffer >>>= 8;
+      bitCount -= 8;
+    }
+  }
+  function resetDict(){
+    dict=new Map();
+    codeSize=minCodeSize+1;
+    nextCode=end+1;
+  }
+  writeCode(clear);
+  if(indices.length===0){writeCode(end);return new Uint8Array(bytes);}
+  let prefix=indices[0];
+  for(let i=1;i<indices.length;i++){
+    const k=indices[i];
+    const key=prefix+','+k;
+    const found=dict.get(key);
+    if(found!==undefined){
+      prefix=found;
+    }else{
+      writeCode(prefix);
+      if(nextCode<4096){
+        dict.set(key,nextCode++);
+        if(nextCode===(1<<codeSize)&&codeSize<12)codeSize++;
+      }else{
+        writeCode(clear);
+        resetDict();
+      }
+      prefix=k;
+    }
+  }
+  writeCode(prefix);
+  writeCode(end);
+  if(bitCount>0)bytes.push(bitBuffer&255);
+  return new Uint8Array(bytes);
+}
+function buildAnimatedGif(frames,width,height,delayCs,comment){
+  const bytes=[];
+  const push=(...v)=>{for(const x of v)bytes.push(x&255);};
+  const le=n=>push(n&255,(n>>8)&255);
+  const ascii=s=>{for(let i=0;i<s.length;i++)push(s.charCodeAt(i));};
+  const blocks=data=>{
+    for(let i=0;i<data.length;i+=255){
+      const n=Math.min(255,data.length-i);push(n);
+      for(let j=0;j<n;j++)push(data[i+j]);
+    }
+    push(0);
+  };
+  ascii('GIF89a');
+  le(width);le(height);
+  push(0xF7,0,0); // 256-entry global palette
+  const pal=gifPalette332();
+  for(const x of pal)push(x);
+  // Infinite loop
+  push(0x21,0xFF,0x0B);ascii('NETSCAPE2.0');push(0x03,0x01,0x00,0x00,0x00);
+  if(comment){
+    push(0x21,0xFE);
+    blocks(new TextEncoder().encode(comment));
+  }
+  for(const frame of frames){
+    // Graphics control extension
+    push(0x21,0xF9,0x04,0x04);
+    le(delayCs);push(0,0);
+    // Image descriptor
+    push(0x2C);le(0);le(0);le(width);le(height);push(0);
+    push(8);
+    blocks(gifLzwEncode(frame.pixels,8));
+  }
+  push(0x3B);
+  return new Uint8Array(bytes);
+}
+function saveStablePeriodGif(){
+  const override=Number(document.getElementById('gifPeriodOverride').value);
+  const detected=world.lastPeriodEstimate.lag;
+  const period=(Number.isFinite(override)&&override>=2)?Math.round(override):detected;
+  if(!period){
+    archiveMessage('No stable period detected yet. Enter a period override, or let the simulation run longer.');
+    return;
+  }
+  if(period>GIF_HISTORY_LIMIT){
+    archiveMessage(`Requested period ${period} exceeds the ${GIF_HISTORY_LIMIT}-frame recorder limit.`);
+    return;
+  }
+  if(gifHistory.length<period){
+    archiveMessage(`Need ${period} recorded frames, but only ${gifHistory.length} are available. Resume the simulation longer.`);
+    return;
+  }
+  const frames=gifHistory.slice(-period);
+  const notes=document.getElementById('experimentNotes').value || '';
+  const comment=[
+    'Gongjing Adaptive Influence CA v17',
+    `grid=${currentPreset}`,
+    `seed=${world.seed}`,
+    `exportStep=${world.stepNo}`,
+    `period=${period}`,
+    `detectedPeriod=${detected||'none'}`,
+    `periodScore=${world.lastPeriodEstimate.score.toFixed(4)}`,
+    `entityFeedback=${world.coupled}`,
+    `reflectorAction=${world.upReflection}`,
+    `stochastic=${JSON.stringify(world.stochastic)}`,
+    `sourceScalePreset=${world.sourceScalePreset||'stable'}`,
+    `sourceRealizationId=${world.sourceRealizationId||'unknown'}`,
+    `sourceLayoutEntropyFallback=${!!world.sourceLayoutEntropyFallback}`,
+    `entropyFallback=${world.entropyFallbackUsed}`,
+    `mutationEnabled=${world.mutationEnabled}`,
+    `notes=${notes}`
+  ].join('\n');
+  archiveMessage(`Encoding ${period} GIF frames...`);
+  setTimeout(()=>{
+    try{
+      const data=buildAnimatedGif(frames,GIF_CAPTURE_W,GIF_CAPTURE_H,8,comment);
+      const blob=new Blob([data],{type:'image/gif'});
+      const name=`gongjing_period${period}_${currentPreset}_seed${world.seed}_step${world.stepNo}_${safeStamp()}.gif`;
+      downloadBlob(blob,name);
+      archiveMessage(`Saved ${period}-step animated GIF. ${notes.trim()?'Notes embedded in GIF comment.':'No notes supplied.'}`);
+    }catch(err){
+      console.error(err);
+      archiveMessage('GIF export failed: '+err.message);
+    }
+  },20);
+}
+function canvasToCell(ev){
+  const rect=canvas.getBoundingClientRect();
+  const sx=canvas.width/rect.width, sy=canvas.height/rect.height;
+  const px=(ev.clientX-rect.left)*sx, py=(ev.clientY-rect.top)*sy;
+  const L=layout();
+  const c=Math.floor((px-L.left)/L.cell);
+  const r=Math.floor((py-L.top)/L.cell);
+  if(r<0||r>=world.H||c<0||c>=world.W)return null;
+  return {r,c};
+}
+function paintAt(r,c){
+  const radius=Math.floor(brushSize/2);
+  let changed=false;
+  for(let dr=-radius;dr<=radius;dr++)for(let dc=-radius;dc<=radius;dc++){
+    const rr=r+dr;
+    if(rr<=0||rr>=world.H-1)continue;
+    const cc=mod(c+dc,world.W);
+    if(world.paintCell(rr,cc,paintType))changed=true;
+  }
+  if(changed){
+    world.refreshAfterPaint();
+    updateUI();
+    draw();
+  }
+}
+function beginPaint(ev){
+  const cell=canvasToCell(ev);
+  if(!cell)return;
+  drawing=true;
+  resetGifHistory('Manual drawing intervention.');
+  canvas.setPointerCapture?.(ev.pointerId);
+  if(!paused){
+    paused=true;
+    document.getElementById('pause').textContent='Resume';
+  }
+  lastPaintKey='';
+  const key=cell.r+','+cell.c;
+  if(key!==lastPaintKey){paintAt(cell.r,cell.c);lastPaintKey=key;}
+  ev.preventDefault();
+}
+function movePaint(ev){
+  if(!drawing)return;
+  const cell=canvasToCell(ev);
+  if(!cell)return;
+  const key=cell.r+','+cell.c;
+  if(key===lastPaintKey)return;
+  paintAt(cell.r,cell.c);
+  lastPaintKey=key;
+  ev.preventDefault();
+}
+function endPaint(ev){
+  if(!drawing)return;
+  drawing=false;
+  lastPaintKey='';
+  try{canvas.releasePointerCapture?.(ev.pointerId);}catch(_){}
+  draw();captureGifFrame();
+}
+function updatePaintButtons(){
+  document.querySelectorAll('[data-paint]').forEach(btn=>{
+    btn.classList.toggle('active',Number(btn.dataset.paint)===paintType);
+  });
+}
+let activeSourceIndex=null;
+let sourceHoverHideTimer=null;
+const sourceHover=document.getElementById('sourceHover');
+const canvasWrap=document.getElementById('canvasWrap');
+const sourceHitLayer=document.getElementById('sourceHitLayer');
+const hoverStrength=document.getElementById('hoverStrength');
+const hoverPeriod=document.getElementById('hoverPeriod');
+const hoverRandomness=document.getElementById('hoverRandomness');
+
+function syncSourceHover(i){
+  const s=world.sources[i]; if(!s)return;
+  document.getElementById('sourceHoverName').textContent=`${s.scaleLabel||'Source'} S${i+1}`;
+  document.getElementById('sourceHoverCol').textContent=`col ${s.col}`;
+  hoverStrength.value=String(Number(s.amp));
+  hoverPeriod.value=String(Math.max(2,Math.round(s.period)));
+  hoverRandomness.value=String(Number(s.randomness||0));
+  document.getElementById('hoverStrengthValue').textContent=Number(s.amp).toFixed(2);
+  document.getElementById('hoverPeriodValue').textContent=String(Math.max(2,Math.round(s.period)));
+  document.getElementById('hoverRandomnessValue').textContent=Number(s.randomness||0).toFixed(2);
+}
+function sourceScreenPosition(i){
+  const s=world.sources[i],L=layout(); if(!s)return null;
+  const cr=canvas.getBoundingClientRect(), wr=canvasWrap.getBoundingClientRect();
+  const scaleX=cr.width/canvas.width, scaleY=cr.height/canvas.height;
+  return {x:(cr.left-wr.left)+(L.left+(s.col+.5)*L.cell)*scaleX,
+          y:(cr.top-wr.top)+(L.top-33)*scaleY};
+}
+function positionSourceHover(i){
+  const p=sourceScreenPosition(i); if(!p)return;
+  const wr=canvasWrap.getBoundingClientRect();
+  const width=222;
+  let left=clamp(p.x,width/2+4,wr.width-width/2-4);
+  sourceHover.style.left=`${left}px`;
+  sourceHover.style.top=`${p.y-sourceHover.offsetHeight-13}px`;
+}
+function showSourceHover(i){
+  clearTimeout(sourceHoverHideTimer); activeSourceIndex=i;
+  document.querySelectorAll('.sourceHit').forEach((el,j)=>el.classList.toggle('active',j===i));
+  syncSourceHover(i); sourceHover.classList.add('show'); positionSourceHover(i);
+}
+function hideSourceHoverSoon(){
+  clearTimeout(sourceHoverHideTimer);
+  sourceHoverHideTimer=setTimeout(()=>{
+    sourceHover.classList.remove('show'); activeSourceIndex=null;
+    document.querySelectorAll('.sourceHit').forEach(el=>el.classList.remove('active'));
+  },320);
+}
+function buildSourceHitTargets(){
+  sourceHitLayer.innerHTML='';
+  world.sources.forEach((s,i)=>{
+    const hit=document.createElement('div'); hit.className='sourceHit'; hit.dataset.sourceIndex=String(i);
+    hit.title=`${s.scaleLabel||'Source'} source ${i+1}`;
+    hit.addEventListener('mouseenter',()=>showSourceHover(i));
+    hit.addEventListener('mouseleave',hideSourceHoverSoon);
+    hit.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();showSourceHover(i);});
+    sourceHitLayer.appendChild(hit);
+  });
+  positionSourceHitTargets();
+}
+function positionSourceHitTargets(){
+  const hits=sourceHitLayer.querySelectorAll('.sourceHit');
+  hits.forEach((hit,i)=>{const p=sourceScreenPosition(i);if(!p)return;const s=world.sources[i],lvl=Number.isInteger(s.scaleLevel)?s.scaleLevel:1;const size=s.scaleKey==='stable'?34:(27+6*lvl);hit.style.width=`${size}px`;hit.style.height=`${size}px`;hit.style.left=`${p.x}px`;hit.style.top=`${p.y}px`;});
+  if(activeSourceIndex!==null)positionSourceHover(activeSourceIndex);
+}
+function updateHoveredSource(field,value){
+  if(activeSourceIndex===null)return; const s=world.sources[activeSourceIndex]; if(!s)return;
+  if(field==='amp')s.amp=clamp(Number(value)||0,0,3);
+  else if(field==='period')s.period=Math.max(2,Math.round(Number(value)||CA_CFG.defaultSourcePeriod));
+  else if(field==='randomness')s.randomness=clamp(Number(value)||0,0,1);
+  s.phase=0;s.dir=0;world.recomputeForcingBasePeriod();world.computeField();world.updateMetrics();
+  syncSourceHover(activeSourceIndex);updateUI();draw();
+}
+function commitHoveredSourceChange(){if(activeSourceIndex===null)return;resetGifHistory(`Source S${activeSourceIndex+1} changed.`);draw();captureGifFrame();}
+function applySourceScalePreset(key,record=true){
+  currentSourceScalePreset=key in SOURCE_SCALE_PRESETS?key:'hierarchy';
+  const spec=world.configureSourceScale(currentSourceScalePreset,{randomize:currentSourceScalePreset==='hierarchy'});
+  const sel=document.getElementById('sourceScalePreset');
+  if(sel)sel.value=currentSourceScalePreset;
+  if(record)resetGifHistory(`Source scale preset: ${spec.label}.`);
+  syncStochasticButtons();
+  renderSourceControls();
+  if(activeSourceIndex!==null && activeSourceIndex>=world.sources.length){
+    sourceHover.classList.remove('show');activeSourceIndex=null;
+  }else if(activeSourceIndex!==null){
+    syncSourceHover(activeSourceIndex);
+  }
+  updateUI();draw();
+  if(record)captureGifFrame();
+  return spec;
+}
+function setStableSourceDefaults(){applySourceScalePreset('stable',true);}
+function renderSourceControls(){buildSourceHitTargets();}
+function ensureVisibleNoiseLevel(){
+  if(world.sources.every(s=>(s.randomness||0)<=0)){for(const s of world.sources)s.randomness=0.15;if(activeSourceIndex!==null)syncSourceHover(activeSourceIndex);}
+}
+function syncStochasticButtons(){
+  const map=[['stochStrength','strength','Strength'],['stochPeriod','period','Period'],['stochTiming','timing','Timing']];
+  for(const [id,key,label] of map){const b=document.getElementById(id);if(!b)continue;b.textContent=`${label}: ${world.stochastic[key]?'ON':'OFF'}`;b.classList.toggle('active',world.stochastic[key]);}
+  const e=document.getElementById('entropyRng');if(e){e.textContent=`Entropy RNG: ${world.stochastic.entropy?'ON':'OFF'}`;e.classList.toggle('active',world.stochastic.entropy);}
+}
+function toggleStochasticChannel(key){
+  const turningOn=!world.stochastic[key]; if(turningOn)ensureVisibleNoiseLevel(); world.setStochasticChannel(key,turningOn);
+  resetGifHistory(`${key} stochastic forcing ${turningOn?'enabled':'disabled'}.`);syncStochasticButtons();if(activeSourceIndex!==null)syncSourceHover(activeSourceIndex);updateUI();draw();captureGifFrame();
+}
+function toggleEntropyRng(){
+  world.setEntropyRng(!world.stochastic.entropy);resetGifHistory(`Entropy RNG ${world.stochastic.entropy?'enabled':'disabled'}.`);syncStochasticButtons();updateUI();draw();captureGifFrame();
+}
+function updateUI(){
+  document.getElementById('mStep').textContent=world.stepNo;
+  document.getElementById('mActive').textContent=world.metrics.active;
+  document.getElementById('mTurn').textContent=`${world.lastChange.born} / ${world.lastChange.died}`;
+  document.getElementById('mCluster').textContent=world.metrics.clustering.toFixed(3);
+  document.getElementById('mActivity').textContent=Math.round(world.metrics.lateActivity*100)+'%';
+  document.getElementById('mDiversity').textContent=world.metrics.typeDiversity.toFixed(3);
+  document.getElementById('mBasePeriod').textContent=String(world.forcingBasePeriod);
+  document.getElementById('mPeriod').textContent=world.lastPeriodEstimate.lag?String(world.lastPeriodEstimate.lag):'none';
+  document.getElementById('mPScore').textContent=world.lastPeriodEstimate.score.toFixed(3);
+  document.getElementById('mSeam').textContent=world.metrics.seamImbalance.toFixed(3);
+  document.getElementById('mReflectors').textContent=world.metrics.reflectorCount;
+  document.getElementById('mREnergy').textContent=world.metrics.meanReflectorEnergy.toFixed(3);
+  const regime=SOURCE_SCALE_PRESETS[world.sourceScalePreset||'hierarchy'];
+  document.getElementById('status').textContent=`${world.status()} · ${GRID_PRESETS[currentPreset].label} · seed ${world.seed} · entity feedback ${world.coupled?'coupled':'disabled'} · reflector action ${world.upReflection?'on':'off'} · mutation ${world.mutationEnabled?'on':'off'} · source regime ${regime.label} · realization ${world.sourceRealizationId||'unknown'} · source stochastic ${[world.stochastic.strength?'S':'',world.stochastic.period?'P':'',world.stochastic.timing?'T':''].filter(Boolean).join('')||'off'} · RNG ${world.stochastic.entropy?(world.entropyFallbackUsed?'entropy-fallback':'entropy'):'seeded'} · mean exposure ${world.metrics.meanExposure.toFixed(2)} · draw ${paintType===0?'eraser':ENTITY[paintType].name}`;
+  const sp=world.currentSourceSpec||sourceScaleSpec(world.sourceScalePreset||'hierarchy',CA_CFG.sourceCount);
+  if(sp.key==='hierarchy'){
+    const mix=sp.levels.map(x=>`${x.code}${x.count}`).join(' / ');
+    const rid=world.sourceRealizationId||'unknown';
+    document.getElementById('periods').innerHTML=`<span class="pill">${world.sources.length} mixed sources · ${mix} · budget ${sp.totalBudget.toFixed(2)} · realization ${rid}</span>`;
+  }else{
+    document.getElementById('periods').innerHTML=`<span class="pill">${world.sources.length} stable sources · A=${sp.strength.toFixed(2)} T=${sp.period} noise=0</span>`;
+  }
+}
+let currentSourcePlan=null;
+function newWorld(seed,mode='random'){
+  const oldStochastic=JSON.parse(JSON.stringify(world.stochastic));
+  const coupled=world.coupled,up=world.upReflection,mutation=world.mutationEnabled;
+  world=new InfluenceCA(seed,coupled,up,mutation,oldStochastic);
+  world.stochastic.entropy=oldStochastic.entropy;
+  if(currentSourceScalePreset==='hierarchy'){
+    if(mode==='replay' && currentSourcePlan){
+      world.configureSourceScale('hierarchy',{plan:currentSourcePlan});
+    }else{
+      world.configureSourceScale('hierarchy',{randomize:true});
+      currentSourcePlan=world.exportSourcePlan();
+    }
+  }else{
+    world.configureSourceScale('stable');
+    currentSourcePlan=world.exportSourcePlan();
+  }
+  acc=0;resetParticles();resetGifHistory(mode==='replay'?'Replayed exact source realization.':'New entropy-randomized source realization.');
+  renderSourceControls();syncStochasticButtons();updateUI();draw();captureGifFrame();
+}
+function entropyWorldSeed(){
+  const x=entropyUint32();
+  return x===null?((Math.random()*4294967296)>>>0):x;
+}
+document.getElementById('pause').addEventListener('click',e=>{paused=!paused;e.currentTarget.textContent=paused?'Resume':'Pause';});
+document.getElementById('stepOnce').addEventListener('click',()=>{world.step();updateUI();draw();captureGifFrame();});
+document.getElementById('newWorld').addEventListener('click',()=>newWorld(entropyWorldSeed(),'random'));
+document.getElementById('replay').addEventListener('click',()=>newWorld(world.seed,'replay'));
+document.getElementById('couple').addEventListener('click',e=>{world.setCoupled(!world.coupled);e.currentTarget.textContent='Entity feedback: '+(world.coupled?'ON':'OFF');e.currentTarget.classList.toggle('active',world.coupled);updateUI();});
+document.getElementById('fieldBtn').addEventListener('click',e=>{showField=!showField;e.currentTarget.textContent='Field: '+(showField?'ON':'OFF');e.currentTarget.classList.toggle('active',showField);});
+document.getElementById('upBtn').addEventListener('click',e=>{world.setUpReflection(!world.upReflection);e.currentTarget.textContent='Reflector action: '+(world.upReflection?'ON':'OFF');e.currentTarget.classList.toggle('active',world.upReflection);updateUI();});
+document.getElementById('mutationBtn').addEventListener('click',e=>{
+  world.setMutation(!world.mutationEnabled);
+  e.currentTarget.textContent='Mutation: '+(world.mutationEnabled?'ON':'OFF');
+  e.currentTarget.classList.toggle('active',world.mutationEnabled);
+  resetGifHistory('Mutation mode changed.');
+  updateUI();
+  draw();
+  captureGifFrame();
+});
+document.getElementById('sourceScalePreset').addEventListener('change',e=>applySourceScalePreset(e.target.value,true));
+document.getElementById('stochStrength').addEventListener('click',()=>toggleStochasticChannel('strength'));
+document.getElementById('stochPeriod').addEventListener('click',()=>toggleStochasticChannel('period'));
+document.getElementById('stochTiming').addEventListener('click',()=>toggleStochasticChannel('timing'));
+document.getElementById('entropyRng').addEventListener('click',toggleEntropyRng);
+document.getElementById('gridPreset').addEventListener('change',e=>{
+  const seed=world.seed,coupled=world.coupled,up=world.upReflection,mutation=world.mutationEnabled,entropy=world.stochastic.entropy;
+  applyPreset(e.target.value);
+  world=new InfluenceCA(seed,coupled,up,mutation,{strength:false,period:false,timing:false,entropy});
+  world.stochastic.entropy=entropy;
+  world.configureSourceScale(currentSourceScalePreset,{randomize:currentSourceScalePreset==='hierarchy'});
+  currentSourcePlan=world.exportSourcePlan();
+  acc=0;resetParticles();resetGifHistory('Grid changed.');
+  renderSourceControls();syncStochasticButtons();updateUI();draw();captureGifFrame();
+});
+document.querySelectorAll('[data-paint]').forEach(btn=>btn.addEventListener('click',()=>{
+  paintType=Number(btn.dataset.paint);
+  updatePaintButtons();
+}));
+document.getElementById('brushSize').addEventListener('change',e=>{brushSize=Number(e.target.value)||1;});
+document.getElementById('clearEntities').addEventListener('click',()=>{
+  if(!paused){
+    paused=true;
+    document.getElementById('pause').textContent='Resume';
+  }
+  resetGifHistory('Entities cleared.');
+  for(let r=1;r<world.H-1;r++)for(let c=0;c<world.W;c++)world.paintCell(r,c,0);
+  world.refreshAfterPaint();
+  updateUI();
+  draw();captureGifFrame();
+});
+canvas.addEventListener('pointerdown',beginPaint);
+canvas.addEventListener('pointermove',movePaint);
+canvas.addEventListener('pointerup',endPaint);
+canvas.addEventListener('pointercancel',endPaint);
+canvas.addEventListener('pointerleave',e=>{if(e.buttons===0)endPaint(e);});
+sourceHover.addEventListener('mouseenter',()=>clearTimeout(sourceHoverHideTimer));
+sourceHover.addEventListener('mouseleave',hideSourceHoverSoon);
+hoverStrength.addEventListener('input',e=>updateHoveredSource('amp',e.target.value));
+hoverStrength.addEventListener('change',commitHoveredSourceChange);
+hoverPeriod.addEventListener('input',e=>updateHoveredSource('period',e.target.value));
+hoverPeriod.addEventListener('change',commitHoveredSourceChange);
+hoverRandomness.addEventListener('input',e=>updateHoveredSource('randomness',e.target.value));
+hoverRandomness.addEventListener('change',commitHoveredSourceChange);
+window.addEventListener('resize',positionSourceHitTargets);
+document.getElementById('stableSourceDefaults').addEventListener('click',setStableSourceDefaults);
+document.getElementById('saveStartConfig').addEventListener('click',saveStartingConfiguration);
+document.getElementById('saveStableGif').addEventListener('click',saveStablePeriodGif);
+document.getElementById('speed').addEventListener('input',e=>{speed=Number(e.target.value);document.getElementById('speedOut').textContent=(speed<1?speed.toFixed(2):speed.toFixed(1))+'×';});
+function frame(now){
+  const dt=Math.min(.05,(now-last)/1000||.016);last=now;
+  let stepped=false;
+  if(!paused){
+    acc+=dt*speed;updateParticles(dt*speed);
+    if(acc>=tickSec){acc-=tickSec;world.step();updateUI();stepped=true;}
+  }
+  draw();
+  if(stepped)captureGifFrame();
+  requestAnimationFrame(frame);
+}
+world.configureSourceScale('hierarchy',{randomize:true});currentSourceScalePreset='hierarchy';currentSourcePlan=world.exportSourcePlan();resetParticles();renderSourceControls();syncStochasticButtons();updateUI();draw();captureGifFrame();requestAnimationFrame(frame);
+</script>
+</body>
+</html>

@@ -1,0 +1,726 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Influence cells v18.1 | Gongjing 共境</title>
+<style>
+:root{
+  --bg:#f6f7f5;--ink:#192228;--muted:#69757c;--line:#d8dddf;--panel:#fff;
+  --blue:#4da8d0;--blue2:#e9f5fa;--purple:#9a72d8;--shadow:0 9px 30px rgba(25,34,40,.08)
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif}
+body{padding:16px}
+button,input,select,textarea{font:inherit}
+.app{max-width:1480px;margin:auto;display:grid;grid-template-columns:minmax(0,1fr) 410px;gap:15px;align-items:start}
+.main{min-width:0}
+.title{font-family:Georgia,serif;font-size:26px;margin:0 0 5px}
+.sub{color:var(--muted);font-size:12.5px;line-height:1.48;margin:0 0 11px;max-width:960px}
+.canvasWrap{position:relative;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px;overflow:visible;box-shadow:0 3px 14px rgba(25,34,40,.04)}
+.canvasWrap canvas{display:block;width:100%;height:auto;aspect-ratio:4/3;background:#fff;touch-action:none;cursor:crosshair}
+.controls,.stochbar,.paintbar,.archivebar{background:#fff;border:1px solid var(--line);border-radius:12px}
+.controls{display:flex;flex-wrap:wrap;gap:7px;margin:9px 0;padding:8px}
+.btn,.paintbtn,.stochbtn,.tinybtn{
+  border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 10px;
+  font-weight:650;font-size:11px;cursor:pointer;color:var(--ink)
+}
+.btn.primary{background:var(--ink);color:#fff}
+.btn.active,.paintbtn.active,.stochbtn.active{border-color:#75b2cf;background:#eef8fc;box-shadow:0 0 0 2px rgba(77,168,208,.12)}
+.stochbtn.entropy.active{border-color:#a68ad1;background:#f5f0fb}
+.speed{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:11px}
+.speed input{width:100px}
+.stochbar{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin:0 0 9px;padding:8px 10px}
+.stochlabel,.paintbar .label,.archivebar .label{font-size:10px;color:var(--muted);font-weight:700}
+.stochhelp{font-size:9px;color:var(--muted);line-height:1.35;flex:1 1 230px}
+.paintbar{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin:0 0 9px;padding:8px 10px}
+.paintdot{width:11px;height:11px;border:1px solid rgba(0,0,0,.2);display:inline-block}
+.paintbtn{display:inline-flex;align-items:center;gap:5px}
+.brushsel,.miniinput{
+  border:1px solid var(--line);border-radius:999px;padding:6px 8px;background:#fff;color:var(--ink);
+  font:600 10px system-ui
+}
+.drawhint{font-size:10px;color:var(--muted);line-height:1.35;flex:1 1 220px}
+.archivebar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin:0 0 9px;padding:9px}
+.archivebar textarea{width:100%;min-height:58px;resize:vertical;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:11px;background:#fcfcfb}
+.archiveactions{display:flex;flex-direction:column;gap:6px;min-width:200px}
+.archiveStatus{font-size:9px;color:var(--muted);line-height:1.35}
+.metrics{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.metric{background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 8px}
+.metric span{display:block;color:var(--muted);font-size:9px}
+.metric b{font-size:14px;display:block;margin-top:2px}
+.status{margin-top:7px;font-size:11px;color:#405059;line-height:1.4}
+
+.sourceHitLayer{position:absolute;inset:0;z-index:15;pointer-events:none}
+.sourceHit{position:absolute;width:14px;height:14px;border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;cursor:pointer;background:transparent;border:1px solid transparent}
+.sourceHit:hover,.sourceHit.active{border-color:rgba(61,145,186,.55);background:rgba(79,164,202,.08)}
+.sourceHover{
+  position:absolute;z-index:20;display:none;width:230px;padding:9px 10px 8px;background:rgba(255,255,255,.98);
+  border:1px solid var(--line);border-radius:11px;box-shadow:var(--shadow);transform:translateX(-50%);pointer-events:auto
+}
+.sourceHover.show{display:block}
+.sourceHover:after{content:"";position:absolute;left:50%;bottom:-7px;width:12px;height:12px;background:#fff;border-right:1px solid var(--line);border-bottom:1px solid var(--line);transform:translateX(-50%) rotate(45deg)}
+.sourceHoverTitle{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:6px;font-size:10px}
+.sourceHoverTitle b{font-size:11px}.sourceHoverTitle span{color:var(--muted);font-family:ui-monospace,monospace}
+.sourceSliderRow{display:grid;grid-template-columns:68px minmax(0,1fr) 48px;gap:6px;align-items:center;margin:5px 0}
+.sourceSliderRow label{font-size:9px;color:var(--muted);font-weight:650}
+.sourceSliderRow input[type=range]{width:100%;margin:0}
+.sourceSliderValue{text-align:right;font:9px ui-monospace,monospace;color:var(--ink)}
+.sourceHoverHint{font-size:8.5px;color:var(--muted);line-height:1.3;margin-top:5px}
+.sourceNodeHint{font-size:9.5px;color:var(--muted);margin:-1px 0 7px}
+
+.side{display:grid;gap:9px}
+.settingsCard,.card{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 3px 14px rgba(25,34,40,.03)}
+.settingsCard{overflow:visible}
+.settingsCard>summary{list-style:none;cursor:pointer;padding:11px 12px;font-family:Georgia,serif;font-size:16px;font-weight:600;display:flex;justify-content:space-between;align-items:center}
+.settingsCard>summary::-webkit-details-marker{display:none}
+.settingsIntro{padding:0 12px 8px;font-size:10px;color:var(--muted);line-height:1.4}
+.settingsActions{display:flex;gap:6px;padding:0 12px 10px;flex-wrap:wrap}
+.settingSection{border-top:1px solid #edf0f1;padding:9px 12px 10px}
+.settingSection h3{margin:0 0 7px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:#536169}
+.paramGrid{display:grid;grid-template-columns:1fr 100px;gap:5px 8px;align-items:center}
+.paramLabel{font-size:10px;color:#3c4a52;display:flex;align-items:center;gap:4px;min-width:0}
+.paramInput{width:100%;border:1px solid var(--line);border-radius:7px;padding:5px 6px;background:#fff;font:10px ui-monospace,monospace;color:var(--ink)}
+.paramInput[type=checkbox]{width:auto;justify-self:start}
+.info{
+  width:14px;height:14px;border-radius:50%;border:1px solid #bdc7cb;color:#748189;
+  display:inline-flex;align-items:center;justify-content:center;font:700 8px Georgia,serif;cursor:help;position:relative;flex:none
+}
+.info:hover:after,.info:focus:after{
+  content:attr(data-tip);position:absolute;z-index:80;right:16px;top:-5px;width:235px;padding:7px 8px;border-radius:8px;
+  background:#162026;color:#fff;font:9px/1.35 system-ui;box-shadow:0 7px 22px rgba(0,0,0,.18);pointer-events:none
+}
+.scaleTable{width:100%;border-collapse:collapse;font-size:9px}
+.scaleTable th,.scaleTable td{border-bottom:1px solid #edf0f1;padding:4px 3px;text-align:left}
+.scaleTable th{color:var(--muted);font-weight:700}
+.scaleTable input{width:62px;border:1px solid var(--line);border-radius:6px;padding:4px;font:9px ui-monospace,monospace}
+.settingsDirty{font-size:9px;color:#a26020;display:none}.settingsDirty.show{display:inline}
+.card{padding:12px}.card h2{font:600 15px Georgia,serif;margin:0 0 7px}.card p,.card li{font-size:10.5px;line-height:1.42;color:#4c5a61}.card ul{padding-left:17px;margin:6px 0}
+.eq{font:10px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;background:#f4f6f7;border-radius:8px;padding:7px;margin:6px 0;overflow:auto}
+.periods{display:flex;flex-wrap:wrap;gap:4px}.pill{font:9px ui-monospace,monospace;background:#f1f4f5;border:1px solid var(--line);padding:3px 5px;border-radius:999px}
+.legend{display:grid;gap:5px}.leg{display:grid;grid-template-columns:16px 1fr auto;gap:6px;align-items:center;font-size:10px}.sw{width:14px;height:14px;border:1px solid rgba(0,0,0,.15)}
+@media(max-width:1080px){.app{grid-template-columns:1fr}.side{grid-template-columns:1fr 1fr}.settingsCard{grid-column:1/-1}.metrics{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:680px){body{padding:8px}.side{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,1fr)}.title{font-size:21px}.archivebar{grid-template-columns:1fr}.archiveactions{min-width:0}.paramGrid{grid-template-columns:1fr 92px}}
+</style>
+<link rel="icon" href="favicon.svg" type="image/svg+xml"><style>
+.public-nav{display:flex;justify-content:space-between;gap:16px;max-width:1060px;margin:0 auto;padding:20px 20px 0;font:14px/1.5 system-ui}
+.public-nav a{color:#245d4f;text-underline-offset:4px}.public-guide{padding:14px 18px;background:#edf3eb;border:1px solid #d5e1d0;border-radius:8px;font:14px/1.65 system-ui;margin:14px 0 20px;color:#203633}.public-guide p{margin:6px 0}.public-guide summary{cursor:pointer;font-weight:600}.app{display:block!important;max-width:1060px!important}.research-details{margin-top:24px;border:1px solid #d8dfd7;padding:16px;border-radius:8px;background:white}.research-details>summary{font:600 15px system-ui;cursor:pointer}.research-details aside{margin-top:16px;display:grid!important;grid-template-columns:1fr 1fr;gap:14px;align-items:start}.research-details aside .card{margin:0}.research-details aside .settings{grid-column:1/-1}a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid #d9a33e;outline-offset:3px}.title{font-size:clamp(25px,4vw,36px)!important}.sub{font-size:15px!important;line-height:1.6!important;color:#485e57!important}
+@media(max-width:760px){.research-details aside{grid-template-columns:1fr}.public-nav{padding-inline:14px}}
+</style></head>
+<body><nav class="public-nav" aria-label="Demonstration navigation"><a href="index.html">共境 Gongjing</a><span><a href="v17.html">v17</a> · <a href="v18.html">v18.1</a> · <a href="river.html">River</a></span></nav>
+<div class="app">
+<section class="main">
+  <h1 class="title">Influence cells · v18.1</h1>
+  <p class="sub">This is a cellular automaton: a grid of small cells that change according to rules. The colored cells alter the influence passing through them, and that influence affects which cells survive or appear.</p><div class="public-guide"><p><b>Try this:</b> watch the pattern, select <b>Pause</b>, then use <b>Step once</b> to see one update. Choose a cell type below the picture and draw on the grid. Select <b>Resume</b> to see the result.</p><p>In v18, the sources at the top have a wider range of rhythms. This page includes the v18.1 update, which adds the optional “Strength walk” setting.</p><p><b>Another experiment:</b> turn <b>Strength walk</b> on. The input strengths will drift within limits. This setting can change the total input as well as its distribution.</p><details><summary>What do the colors and controls mean?</summary><p><b>Black:</b> reduces influence. <b>Blue and green:</b> turn it left or right. <b>Orange:</b> increases it. <b>Purple:</b> sends some upward while using a stored allowance.</p><p><b>Entity feedback:</b> lets cells change the influence around them. <b>Field:</b> shows the influence map. <b>Mutation:</b> lets local conditions change the type of a new cell. <b>Active:</b> the number of occupied cells. The other measurements and settings are for closer study.</p></details><p><b>Proof of concept:</b> this is an abstract model of feedback and pattern formation. Its influence values are not measurements of water or physical energy.</p></div>
+
+  <div class="canvasWrap" id="canvasWrap">
+    <canvas id="world" width="1040" height="780" aria-label="Gongjing adaptive influence cellular automaton"></canvas>
+    <div class="sourceHitLayer" id="sourceHitLayer"></div>
+    <div class="sourceHover" id="sourceHover">
+      <div class="sourceHoverTitle"><b id="sourceHoverName">Source</b><span id="sourceHoverCol">col 0</span></div>
+      <div class="sourceSliderRow"><label>Strength</label><input id="hoverStrength" type="range" min="0" max="3" step="0.005"><span class="sourceSliderValue" id="hoverStrengthValue"></span></div>
+      <div class="sourceSliderRow"><label>Period</label><input id="hoverPeriod" type="range" min="2" max="160" step="0.1"><span class="sourceSliderValue" id="hoverPeriodValue"></span></div>
+      <div class="sourceSliderRow"><label>Noise</label><input id="hoverRandomness" type="range" min="0" max="1" step="0.01"><span class="sourceSliderValue" id="hoverRandomnessValue"></span></div>
+      <div class="sourceSliderRow"><label>Phase</label><input id="hoverPhase" type="range" min="-3.1416" max="3.1416" step="0.01"><span class="sourceSliderValue" id="hoverPhaseValue"></span></div>
+      <div class="sourceSliderRow"><label>Direction</label><input id="hoverDirection" type="range" min="-1" max="1" step="0.01"><span class="sourceSliderValue" id="hoverDirectionValue"></span></div>
+      <div class="sourceHoverHint">These sliders edit all realized source parameters directly. The characteristic period was drawn once when the world was created.</div>
+    </div>
+  </div>
+  <div class="sourceNodeHint">Hover any top source node to inspect or perturb its realized strength, characteristic period, and noise level.</div>
+
+  <div class="controls">
+    <button class="btn primary" id="pause">Pause</button>
+    <button class="btn" id="stepOnce">Step once</button>
+    <button class="btn" id="newWorld">New random world</button>
+    <button class="btn" id="replay">Replay same world</button>
+    <button class="btn active" id="couple">Entity feedback: ON</button>
+    <button class="btn active" id="fieldBtn">Field: ON</button>
+    <button class="btn active" id="upBtn">Reflector action: ON</button>
+    <button class="btn" id="mutationBtn">Mutation: OFF</button>
+    <button class="btn" id="stableSourceDefaults">Stable reference</button>
+    <label class="speed">Speed <input id="speed" type="range" min="0.25" max="10" step="0.25" value="1"><b id="speedOut">1.0×</b></label>
+  </div>
+
+  <div class="stochbar">
+    <span class="stochlabel">Source mode:</span>
+    <select id="sourceScalePreset" class="brushsel">
+      <option value="hierarchy" selected>Distributed multiscale hierarchy</option>
+      <option value="stable">Stable deterministic reference</option>
+    </select>
+    <span class="stochlabel">Temporal stochasticity:</span>
+    <button class="stochbtn" id="stochStrength">Strength noise: OFF</button>
+    <button class="stochbtn" id="strengthWalk" title="Bounded persistent random walk of each source column’s baseline strength. Sources share the same strength range, may cross each other, and can reverse direction.">Strength walk: OFF</button>
+    <button class="stochbtn" id="stochPeriod">Period jitter: OFF</button>
+    <button class="stochbtn" id="stochTiming">Timing jitter: OFF</button>
+    <button class="stochbtn entropy" id="entropyRng">Entropy RNG: OFF</button>
+    <span class="stochhelp">v18.1 separates structural period heterogeneity, memoryless strength noise, and persistent bounded strength random walk. Strength walk changes each source baseline gradually and can reverse direction.</span>
+  </div>
+
+  <div class="paintbar">
+    <span class="label">Draw:</span>
+    <button class="paintbtn active" data-paint="1"><i class="paintdot" style="background:#151515"></i>Absorber</button>
+    <button class="paintbtn" data-paint="2"><i class="paintdot" style="background:#78c2df"></i>Left</button>
+    <button class="paintbtn" data-paint="3"><i class="paintdot" style="background:#48cf5b"></i>Right</button>
+    <button class="paintbtn" data-paint="4"><i class="paintdot" style="background:#efa276"></i>Amplifier</button>
+    <button class="paintbtn" data-paint="5"><i class="paintdot" style="background:#9a72d8"></i>Reflector</button>
+    <button class="paintbtn" data-paint="0">Eraser</button>
+    <label class="label">Brush <select class="brushsel" id="brushSize"><option value="1">1 cell</option><option value="3">3×3</option><option value="5">5×5</option></select></label>
+    <button class="paintbtn" id="clearEntities">Clear entities</button>
+    <span class="drawhint">Drawing pauses the run. Top source row and bottom outlet row are protected.</span>
+  </div>
+
+  <div class="archivebar">
+    <div>
+      <label class="label" for="experimentNotes">Experiment notes</label>
+      <textarea id="experimentNotes" placeholder="Example: distributed-period hierarchy, mutation OFF, hand-drawn deflector corridor."></textarea>
+    </div>
+    <div class="archiveactions">
+      <button class="paintbtn" id="saveStartConfig">Save exact config JSON</button>
+      <button class="paintbtn" id="savePng">Save PNG snapshot</button>
+      <label class="paintbtn" style="justify-content:center">Load config JSON<input id="loadConfig" type="file" accept=".json,application/json" hidden></label>
+      <div class="archiveStatus" id="archiveStatus">v18 paper defaults loaded. Settings changes are explicit and replayable.</div>
+    </div>
+  </div>
+
+  <div class="metrics">
+    <div class="metric"><span>Step</span><b id="mStep">0</b></div>
+    <div class="metric"><span>Active</span><b id="mActive">0</b></div>
+    <div class="metric"><span>Birth / death</span><b id="mTurn">0 / 0</b></div>
+    <div class="metric"><span>Clustering</span><b id="mCluster">0.000</b></div>
+    <div class="metric"><span>Recent activity</span><b id="mActivity">0%</b></div>
+    <div class="metric"><span>Type diversity</span><b id="mDiversity">0.000</b></div>
+    <div class="metric"><span>Macro period</span><b id="mPeriod">none</b></div>
+    <div class="metric"><span>Period score</span><b id="mPScore">0.000</b></div>
+    <div class="metric"><span>Source recurrence</span><b id="mBasePeriod">distributed</b></div>
+    <div class="metric"><span>Seam imbalance</span><b id="mSeam">0.000</b></div>
+    <div class="metric"><span>Reflectors</span><b id="mReflectors">0</b></div>
+    <div class="metric"><span>Reflector energy</span><b id="mREnergy">0.000</b></div>
+  </div>
+  <div class="status" id="status"></div>
+</section>
+
+<details class="research-details"><summary>Advanced model details and settings</summary><aside class="side">
+  <details class="settingsCard" open>
+    <summary><span>Model settings</span><span class="settingsDirty" id="settingsDirty">unapplied changes</span></summary>
+    <div class="settingsIntro">All paper-relevant numerical parameters are editable here. Hover the <b>?</b> next to any label for an explanation. Use <b>Apply & new world</b> to avoid silently changing a running experiment.</div>
+    <div class="settingsActions">
+      <button class="tinybtn primary" id="applySettings" style="background:#192228;color:white">Apply & new world</button>
+      <button class="tinybtn" id="resetSettings">Reset v18 defaults</button>
+      <button class="tinybtn" id="copySettings">Copy settings JSON</button>
+    </div>
+
+    <div class="settingSection">
+      <h3>World & transport</h3>
+      <div class="paramGrid">
+        <div class="paramLabel">Grid preset <span class="info" tabindex="0" data-tip="Controls rows, columns, initial entity count, baseline source count, and attenuation using the calibrated v17 presets.">?</span></div>
+        <select class="paramInput" id="gridPreset"><option value="small">Small 22×28</option><option value="large" selected>Large 48×64</option><option value="xl">XL 64×90</option></select>
+
+        <div class="paramLabel">Initial entities <span class="info" tabindex="0" data-tip="Number of entities placed randomly at world initialization.">?</span></div><input class="paramInput" data-param="initialEntities" type="number" min="0" max="5000" step="1">
+        <div class="paramLabel">Attenuation <span class="info" tabindex="0" data-tip="Per-row influence transmission factor. Values closer to 1 preserve influence over longer distances.">?</span></div><input class="paramInput" data-param="attenuation" type="number" min="0.8" max="1" step="0.001">
+        <div class="paramLabel">Exposure scale <span class="info" tabindex="0" data-tip="Maps raw influence A to bounded exposure E = 1 - exp(-scale × A).">?</span></div><input class="paramInput" data-param="exposureScale" type="number" min="0.1" max="5" step="0.01">
+        <div class="paramLabel">Route sigma <span class="info" tabindex="0" data-tip="Width of the downward routing kernel. Larger values spread influence across more neighboring columns.">?</span></div><input class="paramInput" data-param="routeSigma" type="number" min="0.1" max="3" step="0.01">
+        <div class="paramLabel">Up-route sigma <span class="info" tabindex="0" data-tip="Width of the local upward reflection routing kernel.">?</span></div><input class="paramInput" data-param="upRouteSigma" type="number" min="0.1" max="3" step="0.01">
+      </div>
+    </div>
+
+    <div class="settingSection">
+      <h3>Survival & birth</h3>
+      <div class="paramGrid">
+        <div class="paramLabel">Survival exposure low <span class="info" tabindex="0" data-tip="Lower exposure threshold for favorable survival.">?</span></div><input class="paramInput" data-param="survivalLow" type="number" min="0" max="1" step="0.005">
+        <div class="paramLabel">Survival exposure high <span class="info" tabindex="0" data-tip="Upper exposure threshold for favorable survival.">?</span></div><input class="paramInput" data-param="survivalHigh" type="number" min="0" max="1" step="0.005">
+        <div class="paramLabel">Survival neighbors min <span class="info" tabindex="0" data-tip="Minimum active Moore-neighborhood count for favorable survival. Horizontal neighbors wrap toroidally.">?</span></div><input class="paramInput" data-param="survivalNeighborMin" type="number" min="0" max="8" step="1">
+        <div class="paramLabel">Survival neighbors max <span class="info" tabindex="0" data-tip="Maximum active Moore-neighborhood count for favorable survival.">?</span></div><input class="paramInput" data-param="survivalNeighborMax" type="number" min="0" max="8" step="1">
+        <div class="paramLabel">Birth exposure low <span class="info" tabindex="0" data-tip="Lower exposure threshold for recruitment into an empty cell.">?</span></div><input class="paramInput" data-param="birthLow" type="number" min="0" max="1" step="0.005">
+        <div class="paramLabel">Birth exposure high <span class="info" tabindex="0" data-tip="Upper exposure threshold for recruitment. This parameter was used in the reproductive-openness experiments.">?</span></div><input class="paramInput" data-param="birthHigh" type="number" min="0" max="1" step="0.005">
+        <div class="paramLabel">Birth neighbors min <span class="info" tabindex="0" data-tip="Minimum active neighbors required for birth.">?</span></div><input class="paramInput" data-param="birthNeighborMin" type="number" min="0" max="8" step="1">
+        <div class="paramLabel">Birth neighbors max <span class="info" tabindex="0" data-tip="Maximum active neighbors allowed for birth.">?</span></div><input class="paramInput" data-param="birthNeighborMax" type="number" min="0" max="8" step="1">
+        <div class="paramLabel">Viability max <span class="info" tabindex="0" data-tip="Maximum short-term viability memory. Favorable ticks restore viability; unfavorable ticks reduce it.">?</span></div><input class="paramInput" data-param="viabilityMax" type="number" min="1" max="20" step="1">
+        <div class="paramLabel">Birth viability <span class="info" tabindex="0" data-tip="Initial viability assigned to newborn entities.">?</span></div><input class="paramInput" data-param="birthViability" type="number" min="1" max="20" step="1">
+      </div>
+    </div>
+
+    <div class="settingSection">
+      <h3>Distributed multiscale sources</h3>
+      <div class="paramGrid">
+        <div class="paramLabel">Base source count <span class="info" tabindex="0" data-tip="Expected Fine-source count. Other scale counts decay geometrically from this baseline.">?</span></div><input class="paramInput" data-param="sourceCount" type="number" min="4" max="90" step="1">
+        <div class="paramLabel">Count decay ratio <span class="info" tabindex="0" data-tip="Expected source count is baseCount / ratio^level. Default 2 reproduces the v17 count scaling law in expectation.">?</span></div><input class="paramInput" data-param="sourceCountRatio" type="number" min="1.05" max="5" step="0.05">
+        <div class="paramLabel">Base nominal strength <span class="info" tabindex="0" data-tip="Sets the total nominal source budget: base source count × base nominal strength.">?</span></div><input class="paramInput" data-param="defaultSourceStrength" type="number" min="0" max="3" step="0.005">
+        <div class="paramLabel">Stable-reference period <span class="info" tabindex="0" data-tip="Characteristic period used by every source in the homogeneous stable deterministic reference.">?</span></div><input class="paramInput" data-param="stableSourcePeriod" type="number" min="2" max="500" step="0.5">
+        <div class="paramLabel">Strength scale ratio <span class="info" tabindex="0" data-tip="Relative source strength multiplier between adjacent scale classes before common budget normalization.">?</span></div><input class="paramInput" data-param="sourceStrengthRatio" type="number" min="1" max="5" step="0.05">
+        <div class="paramLabel">Base noise <span class="info" tabindex="0" data-tip="Fine-source stochastic noise level. Coarser sources receive progressively less noise.">?</span></div><input class="paramInput" data-param="sourceBaseNoise" type="number" min="0" max="1" step="0.01">
+        <div class="paramLabel">Noise decay ratio <span class="info" tabindex="0" data-tip="Noise level is baseNoise / ratio^level. Default 2 gives 0.32, 0.16, 0.08, 0.04.">?</span></div><input class="paramInput" data-param="sourceNoiseRatio" type="number" min="1" max="5" step="0.05">
+        <div class="paramLabel">Strength-walk minimum <span class="info" tabindex="0" data-tip="Shared lower bound for every source column’s persistent baseline-strength random walk. At the bound the walk reflects inward rather than sticking.">?</span></div><input class="paramInput" data-param="sourceStrengthWalkMin" type="number" min="0" max="3" step="0.005">
+        <div class="paramLabel">Strength-walk maximum <span class="info" tabindex="0" data-tip="Shared upper bound for every source column’s persistent baseline-strength random walk. Because all scales share the same range, source strengths may cross each other over time.">?</span></div><input class="paramInput" data-param="sourceStrengthWalkMax" type="number" min="0.01" max="5" step="0.005">
+        <div class="paramLabel">Strength-walk step <span class="info" tabindex="0" data-tip="Nominal absolute strength increment per moving tick. The actual step is randomly 0.5–1.5× this value.">?</span></div><input class="paramInput" data-param="sourceStrengthWalkStep" type="number" min="0" max="1" step="0.001">
+        <div class="paramLabel">Walk turn probability <span class="info" tabindex="0" data-tip="Per-tick probability that a source reverses its current strength-walk direction before moving.">?</span></div><input class="paramInput" data-param="sourceStrengthWalkTurnProbability" type="number" min="0" max="1" step="0.005">
+        <div class="paramLabel">Walk move probability <span class="info" tabindex="0" data-tip="Per-tick probability that a source actually takes a strength-walk step. Set to 1 for continuous movement; lower values create pauses.">?</span></div><input class="paramInput" data-param="sourceStrengthWalkMoveProbability" type="number" min="0" max="1" step="0.01">
+        <div class="paramLabel">Period log-σ <span class="info" tabindex="0" data-tip="Spread of the lognormal period distribution. Default 0.42 gives overlapping but still ordered source-scale distributions.">?</span></div><input class="paramInput" data-param="periodLogSigma" type="number" min="0" max="1.5" step="0.01">
+        <div class="paramLabel">Period minimum <span class="info" tabindex="0" data-tip="Lower clamp applied to realized characteristic periods after sampling.">?</span></div><input class="paramInput" data-param="periodMin" type="number" min="1" max="100" step="0.5">
+        <div class="paramLabel">Period maximum <span class="info" tabindex="0" data-tip="Upper clamp applied to realized characteristic periods after sampling.">?</span></div><input class="paramInput" data-param="periodMax" type="number" min="10" max="1000" step="1">
+        <div class="paramLabel">Wave modulation depth <span class="info" tabindex="0" data-tip="Amplitude of the mean-centered sinusoidal source modulation: A(t)=a[1+m sin(...)]. Default 0.40 keeps sources away from zero.">?</span></div><input class="paramInput" data-param="sourceModulationDepth" type="number" min="0" max="0.95" step="0.01">
+        <div class="paramLabel">Period-jitter coefficient <span class="info" tabindex="0" data-tip="When temporal period jitter is ON, effective period is T[1 + coefficient × noise × ξ].">?</span></div><input class="paramInput" data-param="periodJitterCoeff" type="number" min="0" max="2" step="0.01">
+        <div class="paramLabel">Timing-jitter coefficient <span class="info" tabindex="0" data-tip="When timing jitter is ON, phase receives 2π × coefficient × noise × ξ.">?</span></div><input class="paramInput" data-param="timingJitterCoeff" type="number" min="0" max="1" step="0.01">
+      </div>
+      <table class="scaleTable" style="margin-top:8px">
+        <thead><tr><th>Scale</th><th>Period median</th><th>Expected count</th><th>Strength weight</th><th>Noise</th></tr></thead>
+        <tbody id="scaleSettingsBody"></tbody>
+      </table>
+    </div>
+
+    <div class="settingSection">
+      <h3>Reflector ecology</h3>
+      <div class="paramGrid">
+        <div class="paramLabel">Initial Reflector fraction <span class="info" tabindex="0" data-tip="Probability that a randomly initialized entity is a Reflector.">?</span></div><input class="paramInput" data-param="reflectorInitialFraction" type="number" min="0" max="1" step="0.005">
+        <div class="paramLabel">Reflector birth chance <span class="info" tabindex="0" data-tip="Mutation-ON probability of spontaneous Reflector recruitment in a suitable birth cell without a neighboring Reflector.">?</span></div><input class="paramInput" data-param="reflectorBirthChance" type="number" min="0" max="1" step="0.001">
+        <div class="paramLabel">Neighbor Reflector chance <span class="info" tabindex="0" data-tip="Mutation-ON Reflector recruitment probability when a neighboring Reflector exists.">?</span></div><input class="paramInput" data-param="reflectorNeighborBirthChance" type="number" min="0" max="1" step="0.001">
+        <div class="paramLabel">Maximum energy <span class="info" tabindex="0" data-tip="Upper bound of the Reflector energy reserve.">?</span></div><input class="paramInput" data-param="reflectorMaxEnergy" type="number" min="0.1" max="5" step="0.01">
+        <div class="paramLabel">Birth energy <span class="info" tabindex="0" data-tip="Energy assigned to a newly recruited or manually drawn Reflector.">?</span></div><input class="paramInput" data-param="reflectorBirthEnergy" type="number" min="0" max="5" step="0.01">
+        <div class="paramLabel">Initial energy min <span class="info" tabindex="0" data-tip="Lower bound for the initial Reflector energy distribution.">?</span></div><input class="paramInput" data-param="reflectorInitialEnergyMin" type="number" min="0" max="1" step="0.01">
+        <div class="paramLabel">Initial energy max <span class="info" tabindex="0" data-tip="Upper bound for the initial Reflector energy distribution.">?</span></div><input class="paramInput" data-param="reflectorInitialEnergyMax" type="number" min="0" max="1" step="0.01">
+        <div class="paramLabel">Recharge <span class="info" tabindex="0" data-tip="Maximum exposure-dependent Reflector energy recharge per step.">?</span></div><input class="paramInput" data-param="reflectorRecharge" type="number" min="0" max="0.5" step="0.001">
+        <div class="paramLabel">Maintenance <span class="info" tabindex="0" data-tip="Baseline Reflector energy cost each step.">?</span></div><input class="paramInput" data-param="reflectorMaintenance" type="number" min="0" max="0.5" step="0.001">
+        <div class="paramLabel">Reflection cost scale <span class="info" tabindex="0" data-tip="Additional energy cost proportional to reflected influence load.">?</span></div><input class="paramInput" data-param="reflectorCostScale" type="number" min="0" max="2" step="0.01">
+        <div class="paramLabel">Low-energy threshold <span class="info" tabindex="0" data-tip="Below this stored energy, Reflector survival becomes unfavorable.">?</span></div><input class="paramInput" data-param="reflectorLowEnergy" type="number" min="0" max="1" step="0.01">
+        <div class="paramLabel">Up-reflect scale <span class="info" tabindex="0" data-tip="Global multiplier on the Reflector-specific upward reflected influence.">?</span></div><input class="paramInput" data-param="upReflectScale" type="number" min="0" max="3" step="0.01">
+        <div class="paramLabel">Reflection echo passes <span class="info" tabindex="0" data-tip="Number of upward-reflection / downward-repropagation passes used when computing the field.">?</span></div><input class="paramInput" data-param="upReflectPasses" type="number" min="0" max="8" step="1">
+      </div>
+    </div>
+
+    <div class="settingSection">
+      <h3>Entity transformations</h3>
+      <table class="scaleTable">
+        <thead><tr><th>Entity</th><th>Gain</th><th>Rotation</th><th>Up reflect</th></tr></thead>
+        <tbody id="entitySettingsBody"></tbody>
+      </table>
+    </div>
+
+    <div class="settingSection">
+      <h3>Diagnostics</h3>
+      <div class="paramGrid">
+        <div class="paramLabel">History limit <span class="info" tabindex="0" data-tip="Maximum number of recent entity states retained for recurrence analysis.">?</span></div><input class="paramInput" data-param="historyLimit" type="number" min="20" max="1000" step="10">
+        <div class="paramLabel">Estimate every <span class="info" tabindex="0" data-tip="Recompute the macro-period estimate every N simulation steps.">?</span></div><input class="paramInput" data-param="estimateEvery" type="number" min="1" max="100" step="1">
+        <div class="paramLabel">Maximum lag <span class="info" tabindex="0" data-tip="Largest state-history lag considered by the recurrence estimator.">?</span></div><input class="paramInput" data-param="estimateMaxLag" type="number" min="5" max="500" step="1">
+        <div class="paramLabel">Seam strip <span class="info" tabindex="0" data-tip="Number of columns at each horizontal edge used to diagnose toroidal seam imbalance.">?</span></div><input class="paramInput" data-param="seamStrip" type="number" min="1" max="20" step="1">
+      </div>
+    </div>
+  </details>
+
+  <div class="card">
+    <h2>v18 source hypothesis</h2>
+    <p>Source scale is statistical, not rigid. Each source draws its own characteristic period once:</p>
+    <div class="eq">Tᵢ | ℓ ~ LogNormal(log mℓ, σlog)<br>E[T_F] &lt; E[T_M] &lt; E[T_C] &lt; E[T_L]</div>
+    <p>Default medians are 9, 15, 25, and 42 with log-σ = 0.42. Counts remain entropy-randomized around the scaling-law expectation, and strengths are normalized to a comparable total nominal boundary budget.</p>
+    <div class="periods" id="periods"></div>
+  </div>
+
+  <div class="card">
+    <h2>Entity lexicon</h2>
+    <div class="legend">
+      <div class="leg"><i class="sw" style="background:#151515"></i><span>Absorber</span><b>gain .62</b></div>
+      <div class="leg"><i class="sw" style="background:#78c2df"></i><span>Left deflector</span><b>−.35</b></div>
+      <div class="leg"><i class="sw" style="background:#48cf5b"></i><span>Right deflector</span><b>+.35</b></div>
+      <div class="leg"><i class="sw" style="background:#efa276"></i><span>Amplifier</span><b>gain 1.12</b></div>
+      <div class="leg"><i class="sw" style="background:#9a72d8"></i><span>Reflector</span><b>ρ↑ .38</b></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Boundary & fate rules</h2>
+    <ul><li>Top: external source boundary.</li><li>Bottom: open outlet.</li><li>Left/right: toroidal wrap.</li><li>Mutation OFF: newborn type is local-majority inheritance.</li><li>Mutation ON: v17 environment-directed birth typing and rare Reflector recruitment.</li></ul>
+    <div class="eq">E = 1 − exp(−sA)</div>
+  </div>
+</aside></details>
+</div>
+
+<script>
+"use strict";
+
+const DEFAULTS = {
+  gridPreset:"large",
+  survivalNeighborMin:1,survivalNeighborMax:4,birthNeighborMin:2,birthNeighborMax:4,
+  exposureScale:1.15,viabilityMax:2,birthViability:2,routeSigma:0.78,upRouteSigma:0.68,
+  upReflectScale:0.72,upReflectPasses:2,
+  reflectorInitialFraction:0.025,reflectorBirthChance:0.018,reflectorNeighborBirthChance:0.09,
+  reflectorMaxEnergy:1.0,reflectorBirthEnergy:0.58,reflectorInitialEnergyMin:0.45,reflectorInitialEnergyMax:0.95,
+  reflectorRecharge:0.035,reflectorMaintenance:0.018,reflectorCostScale:0.16,reflectorLowEnergy:0.18,
+  historyLimit:180,estimateEvery:4,estimateMaxLag:90,seamStrip:3,
+  defaultSourceStrength:0.45,stableSourcePeriod:18,sourceCountRatio:2,sourceStrengthRatio:2,sourceBaseNoise:0.32,sourceNoiseRatio:2,
+  sourceStrengthWalkMin:0.02,sourceStrengthWalkMax:1.20,sourceStrengthWalkStep:0.012,sourceStrengthWalkTurnProbability:0.04,sourceStrengthWalkMoveProbability:1.0,
+  periodMedians:[9,15,25,42],periodLogSigma:0.42,periodMin:3,periodMax:160,sourceModulationDepth:0.40,
+  periodJitterCoeff:0.35,timingJitterCoeff:0.25
+};
+const GRID_PRESETS={
+  small:{label:"Small 22×28",rows:22,cols:28,sourceCount:7,survivalLow:0.055,survivalHigh:0.90,birthLow:0.26,birthHigh:0.68,attenuation:0.986,initialEntities:42},
+  large:{label:"Large 48×64",rows:48,cols:64,sourceCount:16,survivalLow:0.045,survivalHigh:0.90,birthLow:0.26,birthHigh:0.62,attenuation:0.994,initialEntities:170},
+  xl:{label:"XL 64×90",rows:64,cols:90,sourceCount:22,survivalLow:0.045,survivalHigh:0.90,birthLow:0.26,birthHigh:0.62,attenuation:0.996,initialEntities:300}
+};
+const SOURCE_LEVEL_META=[
+  {key:"fine",code:"F",label:"Fine",level:0},
+  {key:"meso",code:"M",label:"Meso",level:1},
+  {key:"coarse",code:"C",label:"Coarse",level:2},
+  {key:"macro",code:"L",label:"Macro",level:3}
+];
+const DEFAULT_ENTITY={
+  1:{name:"Absorber",gain:0.62,rotate:0.00,reflectUp:0,color:"#151515"},
+  2:{name:"Left deflector",gain:0.90,rotate:-0.35,reflectUp:0,color:"#78c2df"},
+  3:{name:"Right deflector",gain:0.90,rotate:0.35,reflectUp:0,color:"#48cf5b"},
+  4:{name:"Amplifier",gain:1.12,rotate:0.00,reflectUp:0,color:"#efa276"},
+  5:{name:"Reflector",gain:0.82,rotate:0.00,reflectUp:0.38,color:"#9a72d8"}
+};
+let ENTITY=JSON.parse(JSON.stringify(DEFAULT_ENTITY));
+let currentPreset=DEFAULTS.gridPreset;
+let CA_CFG={...DEFAULTS,...GRID_PRESETS[currentPreset],periodMedians:DEFAULTS.periodMedians.slice()};
+let currentSourceMode="hierarchy";
+let currentSourcePlan=null;
+
+const DOWN_OFFSETS=[-2,-1,0,1,2],UP_OFFSETS=[-1,0,1];
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const mod=(n,m)=>((n%m)+m)%m;
+function mulberry32(seed){let a=seed>>>0;return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+function sourceNoiseUnit(seed,sourceIndex,step,channel=0){let h=(seed^Math.imul(sourceIndex+1,0x9E3779B1)^Math.imul(step+1,0x85EBCA77)^Math.imul(channel+1,0xC2B2AE3D))>>>0;h=Math.imul(h^(h>>>16),0x7FEB352D)>>>0;h=Math.imul(h^(h>>>15),0x846CA68B)>>>0;h=(h^(h>>>16))>>>0;return h/4294967296;}
+function entropyRandomUnit(){try{if(globalThis.crypto&&typeof globalThis.crypto.getRandomValues==="function"){const a=new Uint32Array(1);crypto.getRandomValues(a);return a[0]/4294967296;}}catch(_){ }return null;}
+function entropyUint32(){try{if(globalThis.crypto&&typeof globalThis.crypto.getRandomValues==="function"){const a=new Uint32Array(1);crypto.getRandomValues(a);return a[0]>>>0;}}catch(_){ }return null;}
+function entropyShuffle(arr,fallbackRng){const a=arr.slice();for(let i=a.length-1;i>0;i--){const u=entropyRandomUnit();const q=u===null?fallbackRng():u;const j=Math.floor(q*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function entropyPoisson(lambda,fallbackRng){const L=Math.exp(-Math.max(.001,lambda));let k=0,p=1;do{k++;const u=entropyRandomUnit();p*=Math.max(1e-12,u===null?fallbackRng():u);}while(p>L&&k<512);return Math.max(0,k-1);}
+function randomNormal(rng){let u=0,v=0;while(u<=1e-12)u=rng();while(v<=1e-12)v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+function entropyNormal(fallbackRng){let u=entropyRandomUnit(),v=entropyRandomUnit();if(u===null||v===null)return randomNormal(fallbackRng);u=Math.max(u,1e-12);v=Math.max(v,1e-12);return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+function randomHex32(fallbackRng){const x=entropyUint32();const v=x===null?(Math.floor(fallbackRng()*4294967296)>>>0):x;return v.toString(16).padStart(8,"0");}
+function applyGridPreset(name,overwrite=true){currentPreset=GRID_PRESETS[name]?name:"large";const p=GRID_PRESETS[currentPreset];if(overwrite)Object.assign(CA_CFG,p);else{CA_CFG.rows=p.rows;CA_CFG.cols=p.cols;}CA_CFG.estimateMaxLag=currentPreset==="xl"?120:(currentPreset==="large"?90:60);}
+
+function hierarchySpecs(){
+  const expected=SOURCE_LEVEL_META.map(m=>Math.max(1,CA_CFG.sourceCount/Math.pow(CA_CFG.sourceCountRatio,m.level)));
+  const rawStrength=SOURCE_LEVEL_META.map(m=>Math.pow(CA_CFG.sourceStrengthRatio,m.level));
+  const noise=SOURCE_LEVEL_META.map(m=>clamp(CA_CFG.sourceBaseNoise/Math.pow(CA_CFG.sourceNoiseRatio,m.level),0,1));
+  return SOURCE_LEVEL_META.map((m,i)=>({...m,expectedCount:expected[i],rawStrength:rawStrength[i],noise:noise[i],medianPeriod:CA_CFG.periodMedians[i]}));
+}
+function randomizedHierarchy(width,fallbackRng){
+  const specs=hierarchySpecs();let counts=null;
+  for(let attempt=0;attempt<50;attempt++){
+    const cand=specs.map(s=>Math.max(1,entropyPoisson(s.expectedCount,fallbackRng)));
+    const total=cand.reduce((a,b)=>a+b,0);
+    const expectedTotal=specs.reduce((s,x)=>s+x.expectedCount,0);
+    if(total<=width&&total>=Math.max(4,Math.round(expectedTotal*.50))){counts=cand;break;}
+  }
+  if(!counts)counts=specs.map(s=>Math.max(1,Math.round(s.expectedCount)));
+  const targetBudget=CA_CFG.sourceCount*CA_CFG.defaultSourceStrength;
+  const rawBudget=counts.reduce((s,n,i)=>s+n*specs[i].rawStrength,0);
+  const norm=rawBudget>0?targetBudget/rawBudget:1;
+  return specs.map((s,i)=>({...s,count:counts[i],strength:s.rawStrength*norm}));
+}
+
+class InfluenceCA{
+  constructor(seed=91,coupled=true,upReflection=true,mutationEnabled=false,stochasticSettings=null,sourcePlan=null){
+    this.seed=seed>>>0;this.coupled=coupled;this.upReflection=upReflection;this.mutationEnabled=mutationEnabled;
+    this.stochastic=stochasticSettings?{...stochasticSettings}:{strength:false,walk:false,period:false,timing:false,entropy:false};
+    this.sourcePlanInput=sourcePlan;this.reset();
+  }
+  idx(r,c){return r*this.W+c;}
+  reset(){
+    this.H=CA_CFG.rows;this.W=CA_CFG.cols;this.N=this.H*this.W;this.rng=mulberry32(this.seed);
+    this.types=new Uint8Array(this.N);this.viability=new Int16Array(this.N);this.energy=new Float32Array(this.N);
+    this.reflectLoad=new Float32Array(this.N);this.strength=new Float32Array(this.N);this.dir=new Float32Array(this.N);
+    this.exposure=new Float32Array(this.N);this.neighbors=new Uint8Array(this.N);this.stepNo=0;
+    this.lastChange={born:0,died:0,turnover:0};this.turnHistory=[];this.activeHistory=[];this.stateHistory=[];
+    this.lastPeriodEstimate={lag:null,score:0};this.entropyFallbackUsed=false;this.sourceLayoutEntropyFallback=false;
+    this.initializeEntities();
+    if(this.sourcePlanInput)this.importSourcePlan(this.sourcePlanInput);else this.configureSources(currentSourceMode,true);
+    this.computeField();this.updateMetrics();this.recordState();
+  }
+  initializeEntities(){
+    const candidates=[];for(let r=2;r<this.H-2;r++)for(let c=0;c<this.W;c++)candidates.push(this.idx(r,c));
+    for(let i=candidates.length-1;i>0;i--){const j=Math.floor(this.rng()*(i+1));[candidates[i],candidates[j]]=[candidates[j],candidates[i]];}
+    const n=Math.min(CA_CFG.initialEntities,candidates.length);
+    for(let i=0;i<n;i++){
+      const k=candidates[i];let typ;
+      if(this.rng()<CA_CFG.reflectorInitialFraction)typ=5;else typ=1+Math.floor(this.rng()*4);
+      this.types[k]=typ;this.viability[k]=1+Math.floor(this.rng()*Math.max(1,CA_CFG.viabilityMax));
+      if(typ===5)this.energy[k]=CA_CFG.reflectorInitialEnergyMin+(CA_CFG.reflectorInitialEnergyMax-CA_CFG.reflectorInitialEnergyMin)*this.rng();
+    }
+  }
+  configureSources(mode="hierarchy",randomize=true){
+    currentSourceMode=mode;this.sources=[];const fallbackRng=this.rng;const keepEntropy=!!this.stochastic.entropy;
+    if(mode==="stable"){
+      const n=Math.max(1,Math.round(CA_CFG.sourceCount));
+      for(let i=0;i<n;i++){
+        const col=Math.round(i*(this.W-1)/Math.max(1,n-1));
+        this.sources.push({index:i,col,period:CA_CFG.stableSourcePeriod,phase:0,amp:CA_CFG.defaultSourceStrength,randomness:0,dir:0,current:0,
+          scaleLevel:1,scaleKey:"stable",scaleCode:"S",scaleLabel:"Stable",walkStrength:CA_CFG.defaultSourceStrength,walkDir:(this.rng()<.5?-1:1),stochasticCacheStep:-1,stochasticCache:{}});
+      }
+      this.sourceRealizationId="stable";this.sourceLayoutEntropyFallback=false;
+    }else{
+      const levels=randomizedHierarchy(this.W,fallbackRng);
+      const cols=entropyShuffle(Array.from({length:this.W},(_,i)=>i),fallbackRng);
+      this.sourceLayoutEntropyFallback=entropyRandomUnit()===null;
+      this.sourceRealizationId=randomHex32(fallbackRng);
+      const sourceTypes=[];for(const level of levels)for(let k=0;k<level.count;k++)sourceTypes.push(level);
+      const shuffledTypes=randomize?entropyShuffle(sourceTypes,fallbackRng):sourceTypes;
+      let ci=0;
+      for(const level of shuffledTypes){
+        const col=cols[ci++%cols.length];
+        const z=randomize?entropyNormal(fallbackRng):randomNormal(fallbackRng);
+        const period=clamp(level.medianPeriod*Math.exp(CA_CFG.periodLogSigma*z),CA_CFG.periodMin,CA_CFG.periodMax);
+        this.sources.push({index:this.sources.length,col,period,phase:0,amp:level.strength,randomness:level.noise,dir:0,current:0,
+          scaleLevel:level.level,scaleKey:level.key,scaleCode:level.code,scaleLabel:level.label,periodMedian:level.medianPeriod,
+          walkStrength:level.strength,walkDir:((entropyRandomUnit()??fallbackRng())<.5?-1:1),stochasticCacheStep:-1,stochasticCache:{}});
+      }
+    }
+    this.sourceMode=mode;this.computeSourceRecurrence();this.sourcePlanInput=this.exportSourcePlan();
+  }
+  exportSourcePlan(){return{id:this.sourceRealizationId,entropyFallback:this.sourceLayoutEntropyFallback,mode:this.sourceMode,sources:this.sources.map(s=>({col:s.col,period:s.period,phase:s.phase,amp:s.amp,randomness:s.randomness,dir:s.dir,scaleLevel:s.scaleLevel,scaleKey:s.scaleKey,scaleCode:s.scaleCode,scaleLabel:s.scaleLabel,periodMedian:s.periodMedian,walkStrength:Number.isFinite(s.walkStrength)?s.walkStrength:s.amp,walkDir:s.walkDir||1}))};}
+  importSourcePlan(plan){this.sources=plan.sources.map((s,i)=>({...s,index:i,current:0,noiseFactor:1,effectivePeriod:s.period,timingJitter:0,walkStrength:Number.isFinite(s.walkStrength)?s.walkStrength:s.amp,walkDir:s.walkDir||1,stochasticCacheStep:-1,stochasticCache:{}}));this.sourceRealizationId=plan.id||"loaded";this.sourceLayoutEntropyFallback=!!plan.entropyFallback;this.sourceMode=plan.mode||"hierarchy";currentSourceMode=this.sourceMode;this.computeSourceRecurrence();}
+  sourceRandomUnit(s,t,channel){if(!this.stochastic.entropy)return sourceNoiseUnit(this.seed,s.index||0,t,channel);if(s.stochasticCacheStep!==t){s.stochasticCacheStep=t;s.stochasticCache={};}if(Object.prototype.hasOwnProperty.call(s.stochasticCache,channel))return s.stochasticCache[channel];const q=entropyRandomUnit();if(q===null){this.entropyFallbackUsed=true;const p=sourceNoiseUnit(this.seed,s.index||0,t,channel);s.stochasticCache[channel]=p;return p;}s.stochasticCache[channel]=q;return q;}
+  advanceStrengthWalk(){
+    if(!this.stochastic.walk)return;
+    let lo=Math.max(0,Number(CA_CFG.sourceStrengthWalkMin)||0),hi=Math.max(lo+1e-9,Number(CA_CFG.sourceStrengthWalkMax)||lo+1);
+    const step=Math.max(0,Number(CA_CFG.sourceStrengthWalkStep)||0),pTurn=clamp(Number(CA_CFG.sourceStrengthWalkTurnProbability)||0,0,1),pMove=clamp(Number(CA_CFG.sourceStrengthWalkMoveProbability)||0,0,1);
+    for(const s of this.sources){
+      if(!Number.isFinite(s.walkStrength))s.walkStrength=clamp(Number(s.amp)||0,lo,hi);
+      if(s.walkDir!==-1&&s.walkDir!==1)s.walkDir=this.sourceRandomUnit(s,this.stepNo,40)<.5?-1:1;
+      if(this.sourceRandomUnit(s,this.stepNo,41)<pTurn)s.walkDir*=-1;
+      if(this.sourceRandomUnit(s,this.stepNo,42)<pMove&&step>0){
+        const mag=step*(.5+this.sourceRandomUnit(s,this.stepNo,43));
+        s.walkStrength+=s.walkDir*mag;
+        while(s.walkStrength<lo||s.walkStrength>hi){
+          if(s.walkStrength<lo){s.walkStrength=lo+(lo-s.walkStrength);s.walkDir=1;}
+          if(s.walkStrength>hi){s.walkStrength=hi-(s.walkStrength-hi);s.walkDir=-1;}
+        }
+        s.walkStrength=clamp(s.walkStrength,lo,hi);
+      }
+    }
+  }
+  sourceAmplitude(s,t=this.stepNo){
+    const T=Math.max(CA_CFG.periodMin,Number(s.period)||18),amp=Math.max(0,this.stochastic.walk?(Number.isFinite(s.walkStrength)?s.walkStrength:Number(s.amp)||0):(Number(s.amp)||0)),r=clamp(Number(s.randomness)||0,0,1);
+    const signed=ch=>this.sourceRandomUnit(s,t,ch)*2-1;
+    const pj=(this.stochastic.period&&r>0)?CA_CFG.periodJitterCoeff*r*signed(2):0;
+    const effectiveT=clamp(T*(1+pj),CA_CFG.periodMin,CA_CFG.periodMax);
+    const tj=(this.stochastic.timing&&r>0)?2*Math.PI*CA_CFG.timingJitterCoeff*r*signed(3):0;
+    const periodic=amp*(1+CA_CFG.sourceModulationDepth*Math.sin(2*Math.PI*t/effectiveT+(s.phase||0)+tj));
+    const sf=(this.stochastic.strength&&r>0)?Math.max(0,1+r*signed(1)):1;
+    s.noiseFactor=sf;s.effectivePeriod=effectiveT;s.timingJitter=tj;s.current=Math.max(0,periodic*sf);return s.current;
+  }
+  computeSourceRecurrence(){
+    if(this.sourceMode==="hierarchy"){this.forcingBasePeriod=(this.stochastic.period||this.stochastic.timing||this.stochastic.strength)?"stochastic":"distributed";return;}
+    this.forcingBasePeriod=CA_CFG.stableSourcePeriod;
+  }
+  propagateInjections(totalS,totalD,injectS,injectD){
+    const W=this.W,H=this.H;let curS=new Float64Array(W),curD=new Float64Array(W);
+    for(let r=0;r<H;r++){
+      for(let c=0;c<W;c++){const k=this.idx(r,c);curS[c]+=injectS[k];curD[c]+=injectD[k];totalS[k]+=curS[c];totalD[k]+=curD[c];}
+      if(r===H-1)break;
+      const nextS=new Float64Array(W),nextD=new Float64Array(W);
+      for(let c=0;c<W;c++){
+        const a=curS[c];if(a<1e-11)continue;const k=this.idx(r,c),typ=this.types[k],e=typ?ENTITY[typ]:null;
+        const gain=(this.coupled&&e)?e.gain:1,rot=(this.coupled&&e)?e.rotate:0;
+        const h=a>1e-12?curD[c]/a:0,ho=clamp(h+rot,-1,1),out=a*gain*CA_CFG.attenuation,mu=ho*1.6;
+        let den=0,ws=[];for(const off of DOWN_OFFSETS){const w=Math.exp(-.5*Math.pow((off-mu)/CA_CFG.routeSigma,2));ws.push(w);den+=w;}
+        for(let z=0;z<DOWN_OFFSETS.length;z++){const cc=mod(c+DOWN_OFFSETS[z],W),q=out*ws[z]/den;nextS[cc]+=q;nextD[cc]+=q*ho;}
+      }
+      curS=nextS;curD=nextD;
+    }
+  }
+  computeField(){
+    const totalS=new Float64Array(this.N),totalD=new Float64Array(this.N),injectS=new Float64Array(this.N),injectD=new Float64Array(this.N);
+    for(const s of this.sources){const q=this.sourceAmplitude(s,this.stepNo);injectS[this.idx(0,s.col)]+=q;injectD[this.idx(0,s.col)]+=q*(s.dir||0);}
+    this.propagateInjections(totalS,totalD,injectS,injectD);this.reflectLoad.fill(0);
+    if(this.upReflection&&CA_CFG.upReflectPasses>0){
+      for(let pass=0;pass<CA_CFG.upReflectPasses;pass++){
+        const echoS=new Float64Array(this.N),echoD=new Float64Array(this.N);let any=false;
+        for(let r=1;r<this.H;r++)for(let c=0;c<this.W;c++){
+          const k=this.idx(r,c);if(this.types[k]!==5||this.energy[k]<=0)continue;const e=ENTITY[5];
+          const reflected=(e.reflectUp||0)*totalS[k]*this.energy[k]*CA_CFG.upReflectScale;if(reflected<1e-12)continue;
+          this.reflectLoad[k]=Math.max(this.reflectLoad[k],reflected);any=true;
+          const h=totalS[k]>1e-12?totalD[k]/totalS[k]:0,mu=clamp(h,-1,1)*.55;
+          let den=0,ws=[];for(const off of UP_OFFSETS){const w=Math.exp(-.5*Math.pow((off-mu)/CA_CFG.upRouteSigma,2));ws.push(w);den+=w;}
+          for(let z=0;z<UP_OFFSETS.length;z++){const rr=r-1,cc=mod(c+UP_OFFSETS[z],this.W),nk=this.idx(rr,cc),q=reflected*ws[z]/den;echoS[nk]+=q;echoD[nk]+=q*h;}
+        }
+        if(!any)break;this.propagateInjections(totalS,totalD,echoS,echoD);
+      }
+    }
+    for(let k=0;k<this.N;k++){this.strength[k]=totalS[k];this.dir[k]=totalS[k]>1e-9?totalD[k]/totalS[k]:0;this.exposure[k]=1-Math.exp(-totalS[k]*CA_CFG.exposureScale);}
+  }
+  countNeighbors(types=this.types){
+    const n=new Uint8Array(this.N);
+    for(let r=0;r<this.H;r++)for(let c=0;c<this.W;c++){let q=0;for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){if(!dr&&!dc)continue;const rr=r+dr;if(rr<0||rr>=this.H)continue;const cc=mod(c+dc,this.W);if(types[this.idx(rr,cc)]>0)q++;}n[this.idx(r,c)]=q;}
+    this.neighbors=n;return n;
+  }
+  majorityNeighborType(r,c,types){
+    const count=[0,0,0,0,0,0];for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){if(!dr&&!dc)continue;const rr=r+dr;if(rr<0||rr>=this.H)continue;const cc=mod(c+dc,this.W),t=types[this.idx(rr,cc)];if(t)count[t]++;}
+    let mx=0;for(let t=1;t<=5;t++)mx=Math.max(mx,count[t]);if(mx===0)return 4;const tied=[];for(let t=1;t<=5;t++)if(count[t]===mx)tied.push(t);
+    const h=(Math.imul(this.seed,1103515245)+Math.imul(r+1,73856093)+Math.imul(c+1,19349663)+Math.imul(this.stepNo+1,83492791))>>>0;return tied[h%tied.length];
+  }
+  chooseBirthType(r,c,types,E,D){
+    if(!this.mutationEnabled)return this.majorityNeighborType(r,c,types);
+    let rn=0;for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){if(!dr&&!dc)continue;const rr=r+dr;if(rr<0||rr>=this.H)continue;const cc=mod(c+dc,this.W);if(types[this.idx(rr,cc)]===5)rn++;}
+    const h=(Math.imul(this.seed^0x9e3779b9,1664525)+Math.imul(r+3,2246822519)+Math.imul(c+7,3266489917)+Math.imul(this.stepNo+11,668265263))>>>0;
+    const u=h/4294967296,p=rn>0?CA_CFG.reflectorNeighborBirthChance:CA_CFG.reflectorBirthChance;if(E>.24&&E<.66&&u<p)return 5;
+    let typ=this.majorityNeighborType(r,c,types);if(typ===5)typ=4;if(D<-.18)return 2;if(D>.18)return 3;if(E>.70)return 1;if(Math.abs(D)<.08&&E<.56)return 4;return typ;
+  }
+  step(){
+    const old=this.types.slice(),types=this.types.slice(),health=new Int16Array(this.viability),energy=new Float32Array(this.energy),n=this.countNeighbors(old);let died=0,born=0;
+    for(let k=0;k<this.N;k++){
+      const typ=old[k];if(!typ)continue;const nn=n[k],E=this.exposure[k];let fav=E>=CA_CFG.survivalLow&&E<=CA_CFG.survivalHigh&&nn>=CA_CFG.survivalNeighborMin&&nn<=CA_CFG.survivalNeighborMax;
+      if(typ===5){const recharge=CA_CFG.reflectorRecharge*clamp((E-.08)/.55,0,1),cost=CA_CFG.reflectorMaintenance+CA_CFG.reflectorCostScale*Math.min(1,this.reflectLoad[k]);energy[k]=clamp(energy[k]+recharge-cost,0,CA_CFG.reflectorMaxEnergy);if(energy[k]<CA_CFG.reflectorLowEnergy)fav=false;}
+      health[k]=fav?Math.min(CA_CFG.viabilityMax,health[k]+1):health[k]-1;if(health[k]<=0){types[k]=0;health[k]=0;energy[k]=0;died++;}
+    }
+    const n2=this.countNeighbors(types),base=types.slice(),births=[];
+    for(let r=1;r<this.H-1;r++)for(let c=0;c<this.W;c++){const k=this.idx(r,c);if(types[k])continue;const E=this.exposure[k],nn=n2[k];if(E>=CA_CFG.birthLow&&E<=CA_CFG.birthHigh&&nn>=CA_CFG.birthNeighborMin&&nn<=CA_CFG.birthNeighborMax)births.push([r,c,k]);}
+    for(const [r,c,k] of births){const typ=this.chooseBirthType(r,c,base,this.exposure[k],this.dir[k]);types[k]=typ;health[k]=CA_CFG.birthViability;energy[k]=typ===5?CA_CFG.reflectorBirthEnergy:0;born++;}
+    this.types=types;this.viability=health;this.energy=energy;this.stepNo++;this.advanceStrengthWalk();this.lastChange={born,died,turnover:born+died};
+    this.turnHistory.push(born+died);if(this.turnHistory.length>80)this.turnHistory.shift();this.computeField();this.updateMetrics();this.activeHistory.push(this.metrics.active);if(this.activeHistory.length>300)this.activeHistory.shift();this.recordState();
+    if(this.stepNo%Math.max(1,CA_CFG.estimateEvery)===0)this.lastPeriodEstimate=this.estimatePeriod();return this.lastChange;
+  }
+  updateMetrics(){
+    const n=this.countNeighbors(this.types);let active=0,ns=0,meanE=0,left=0,right=0,re=0;const counts=[0,0,0,0,0,0],strip=Math.max(1,Math.min(CA_CFG.seamStrip,this.W>>1));
+    for(let r=0;r<this.H;r++)for(let c=0;c<this.W;c++){const k=this.idx(r,c),t=this.types[k];if(!t)continue;active++;ns+=n[k];meanE+=this.exposure[k];counts[t]++;if(t===5)re+=this.energy[k];if(c<strip)left++;if(c>=this.W-strip)right++;}
+    const recent=this.turnHistory.slice(-40),activity=recent.length?recent.filter(x=>x>0).length/recent.length:0;let entropy=0;
+    if(active){for(let t=1;t<=5;t++)if(counts[t]){const p=counts[t]/active;entropy-=p*Math.log(p);}entropy/=Math.log(5);}
+    this.metrics={active,clustering:active?ns/(active*8):0,meanExposure:active?meanE/active:0,lateActivity:activity,typeDiversity:entropy,counts,seamImbalance:active?(right-left)/active:0,reflectorCount:counts[5],meanReflectorEnergy:counts[5]?re/counts[5]:0};
+  }
+  recordState(){this.stateHistory.push(this.types.slice());while(this.stateHistory.length>CA_CFG.historyLimit)this.stateHistory.shift();}
+  stateSimilarity(a,b){let inter=0,union=0,typed=0;for(let i=0;i<a.length;i++){if(a[i]||b[i]){union++;if(a[i]&&b[i])inter++;if(a[i]===b[i])typed++;}}if(!union)return 1;return .55*(inter/union)+.45*(typed/union);}
+  estimatePeriod(){
+    const hist=this.stateHistory,maxLag=Math.min(CA_CFG.estimateMaxLag,hist.length-2);if(maxLag<2)return{lag:null,score:0};let bestLag=null,best=-1;
+    for(let lag=2;lag<=maxLag;lag++){let s=0,n=0;const start=Math.max(lag,hist.length-20);for(let i=start;i<hist.length;i++){s+=this.stateSimilarity(hist[i],hist[i-lag]);n++;}const q=n?s/n:0;if(q>best){best=q;bestLag=lag;}}
+    return{lag:best>.74?bestLag:null,score:Math.max(0,best)};
+  }
+  status(){const m=this.metrics;if(m.active===0)return"Extinction attractor";if(this.stepNo<15)return"Transient selection";if(this.stepNo<40)return"Reconfiguration";if(this.lastPeriodEstimate.lag&&this.lastPeriodEstimate.score>.90)return"Periodic patterned regime";if(m.lateActivity>.55)return"Metastable dynamic regime";if(m.lateActivity<.15)return"Near static attractor";return"Adaptive patterned regime";}
+  paintCell(r,c,typ){if(r<=0||r>=this.H-1)return false;c=mod(c,this.W);const k=this.idx(r,c),t=clamp(Math.round(typ),0,5);this.types[k]=t;if(!t){this.viability[k]=0;this.energy[k]=0;this.reflectLoad[k]=0;}else{this.viability[k]=CA_CFG.viabilityMax;this.energy[k]=t===5?CA_CFG.reflectorBirthEnergy:0;this.reflectLoad[k]=0;}return true;}
+  refreshAfterPaint(){this.computeField();this.updateMetrics();this.recordState();}
+}
+
+const canvas=document.getElementById("world"),ctx=canvas.getContext("2d"),canvasWrap=document.getElementById("canvasWrap");
+const sourceHitLayer=document.getElementById("sourceHitLayer"),sourceHover=document.getElementById("sourceHover");
+const hoverStrength=document.getElementById("hoverStrength"),hoverPeriod=document.getElementById("hoverPeriod"),hoverRandomness=document.getElementById("hoverRandomness"),hoverPhase=document.getElementById("hoverPhase"),hoverDirection=document.getElementById("hoverDirection");
+let paused=false,showField=true,speed=1,acc=0,last=performance.now(),paintType=1,brushSize=1,drawing=false,lastPaintKey="",activeSourceIndex=null,sourceHoverHideTimer=null;
+let world=new InfluenceCA(91,true,true,false,{strength:false,walk:false,period:false,timing:false,entropy:false});
+
+function layout(){const pad=34,sourceH=52,cw=(canvas.width-pad*2)/world.W,ch=(canvas.height-pad-sourceH-12)/world.H,cell=Math.min(cw,ch),width=cell*world.W,height=cell*world.H;return{cell,left:(canvas.width-width)/2,top:sourceH,width,height,sourceY:sourceH-20};}
+function draw(){
+  const L=layout();ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle="#fff";ctx.fillRect(0,0,canvas.width,canvas.height);
+  if(showField){
+    for(let r=0;r<world.H;r++)for(let c=0;c<world.W;c++){const k=world.idx(r,c),e=world.exposure[k];if(e<.006)continue;const a=.06+.34*clamp(e,0,1);ctx.fillStyle=`rgba(73,169,211,${a})`;ctx.fillRect(L.left+c*L.cell,L.top+r*L.cell,L.cell+.25,L.cell+.25);}
+  }
+  ctx.strokeStyle="rgba(25,34,40,.08)";ctx.lineWidth=.5;
+  if(L.cell>6){for(let r=0;r<=world.H;r++){const y=L.top+r*L.cell;ctx.beginPath();ctx.moveTo(L.left,y);ctx.lineTo(L.left+L.width,y);ctx.stroke();}for(let c=0;c<=world.W;c++){const x=L.left+c*L.cell;ctx.beginPath();ctx.moveTo(x,L.top);ctx.lineTo(x,L.top+L.height);ctx.stroke();}}
+  for(let r=0;r<world.H;r++)for(let c=0;c<world.W;c++){const k=world.idx(r,c),t=world.types[k];if(!t)continue;const x=L.left+c*L.cell,y=L.top+r*L.cell;ctx.fillStyle=ENTITY[t].color;ctx.fillRect(x+.8,y+.8,Math.max(1,L.cell-1.6),Math.max(1,L.cell-1.6));if(t===5&&L.cell>5){ctx.fillStyle=`rgba(255,255,255,${.18+.55*world.energy[k]})`;ctx.fillRect(x+L.cell*.30,y+L.cell*.30,L.cell*.40,L.cell*.40);}}
+  const scaleColor={fine:"#78c2df",meso:"#4da8d0",coarse:"#557fa8",macro:"#6d5f9d",stable:"#67737a"};
+  ctx.textAlign="center";ctx.textBaseline="middle";
+  for(const s of world.sources){const x=L.left+(s.col+.5)*L.cell,y=L.sourceY,rad=s.scaleLevel===3?7:s.scaleLevel===2?6:s.scaleLevel===1?5:4;ctx.fillStyle=scaleColor[s.scaleKey]||"#4da8d0";ctx.beginPath();ctx.arc(x,y,rad,0,Math.PI*2);ctx.fill();ctx.fillStyle="#fff";ctx.font=`700 ${Math.max(7,rad+2)}px system-ui`;ctx.fillText(s.scaleCode||"S",x,y+.4);ctx.strokeStyle="rgba(55,90,106,.35)";ctx.beginPath();ctx.moveTo(x,y+rad+1);ctx.lineTo(x,L.top-2);ctx.stroke();}
+  ctx.textAlign="left";ctx.fillStyle="#728087";ctx.font="10px system-ui";ctx.fillText("top sources",L.left,L.sourceY-15);ctx.fillText("open outlet",L.left,L.top+L.height+14);
+}
+function sourceCssPosition(s){const L=layout(),rect=canvas.getBoundingClientRect(),wrap=canvasWrap.getBoundingClientRect(),sx=rect.width/canvas.width,sy=rect.height/canvas.height;return{x:rect.left-wrap.left+(L.left+(s.col+.5)*L.cell)*sx,y:rect.top-wrap.top+L.sourceY*sy};}
+function buildSourceHits(){sourceHitLayer.innerHTML="";world.sources.forEach((s,i)=>{const el=document.createElement("div");el.className="sourceHit";el.dataset.index=i;el.addEventListener("mouseenter",()=>showSourceHover(i));el.addEventListener("mouseleave",hideSourceHoverSoon);sourceHitLayer.appendChild(el);});positionSourceHits();}
+function positionSourceHits(){[...sourceHitLayer.children].forEach(el=>{const s=world.sources[Number(el.dataset.index)];if(!s)return;const p=sourceCssPosition(s);el.style.left=p.x+"px";el.style.top=p.y+"px";});if(activeSourceIndex!==null&&sourceHover.classList.contains("show"))positionSourceHover(activeSourceIndex);}
+function positionSourceHover(i){const s=world.sources[i];if(!s)return;const p=sourceCssPosition(s);sourceHover.style.left=clamp(p.x,125,canvasWrap.clientWidth-125)+"px";sourceHover.style.top=Math.max(4,p.y-202)+"px";}
+function syncSourceHover(i){const s=world.sources[i];if(!s)return;document.getElementById("sourceHoverName").textContent=`${s.scaleCode||"S"} · ${s.scaleLabel||"Source"} #${i+1}`;document.getElementById("sourceHoverCol").textContent=`col ${s.col}${world.stochastic.walk?` · walk ${Number(s.walkStrength).toFixed(3)} ${s.walkDir>0?"↑":"↓"}`:""}`;hoverStrength.value=s.amp;hoverPeriod.value=s.period;hoverRandomness.value=s.randomness||0;hoverPhase.value=s.phase||0;hoverDirection.value=s.dir||0;document.getElementById("hoverStrengthValue").textContent=Number(s.amp).toFixed(3);document.getElementById("hoverPeriodValue").textContent=Number(s.period).toFixed(1);document.getElementById("hoverRandomnessValue").textContent=Number(s.randomness||0).toFixed(2);document.getElementById("hoverPhaseValue").textContent=Number(s.phase||0).toFixed(2);document.getElementById("hoverDirectionValue").textContent=Number(s.dir||0).toFixed(2);}
+function showSourceHover(i){clearTimeout(sourceHoverHideTimer);activeSourceIndex=i;syncSourceHover(i);sourceHover.classList.add("show");[...sourceHitLayer.children].forEach((x,j)=>x.classList.toggle("active",j===i));positionSourceHover(i);}
+function hideSourceHoverSoon(){sourceHoverHideTimer=setTimeout(()=>{sourceHover.classList.remove("show");[...sourceHitLayer.children].forEach(x=>x.classList.remove("active"));activeSourceIndex=null;},180);}
+sourceHover.addEventListener("mouseenter",()=>clearTimeout(sourceHoverHideTimer));sourceHover.addEventListener("mouseleave",hideSourceHoverSoon);
+function updateHoveredSource(field,value){if(activeSourceIndex===null)return;const s=world.sources[activeSourceIndex];s[field]=Number(value);if(field==="amp")s.walkStrength=Number(value);world.computeSourceRecurrence();world.computeField();world.updateMetrics();syncSourceHover(activeSourceIndex);updateUI();draw();}
+hoverStrength.addEventListener("input",e=>updateHoveredSource("amp",e.target.value));hoverPeriod.addEventListener("input",e=>updateHoveredSource("period",e.target.value));hoverRandomness.addEventListener("input",e=>updateHoveredSource("randomness",e.target.value));hoverPhase.addEventListener("input",e=>updateHoveredSource("phase",e.target.value));hoverDirection.addEventListener("input",e=>updateHoveredSource("dir",e.target.value));
+
+function updateUI(){
+  document.getElementById("mStep").textContent=world.stepNo;document.getElementById("mActive").textContent=world.metrics.active;document.getElementById("mTurn").textContent=`${world.lastChange.born} / ${world.lastChange.died}`;
+  document.getElementById("mCluster").textContent=world.metrics.clustering.toFixed(3);document.getElementById("mActivity").textContent=Math.round(world.metrics.lateActivity*100)+"%";document.getElementById("mDiversity").textContent=world.metrics.typeDiversity.toFixed(3);
+  document.getElementById("mPeriod").textContent=world.lastPeriodEstimate.lag||"none";document.getElementById("mPScore").textContent=world.lastPeriodEstimate.score.toFixed(3);document.getElementById("mBasePeriod").textContent=world.forcingBasePeriod;
+  document.getElementById("mSeam").textContent=world.metrics.seamImbalance.toFixed(3);document.getElementById("mReflectors").textContent=world.metrics.reflectorCount;document.getElementById("mREnergy").textContent=world.metrics.meanReflectorEnergy.toFixed(3);
+  const counts=SOURCE_LEVEL_META.map(m=>world.sources.filter(s=>s.scaleKey===m.key).length).join("/");
+  document.getElementById("status").textContent=`${world.status()} · ${GRID_PRESETS[currentPreset].label} · seed ${world.seed} · source realization ${world.sourceRealizationId} · F/M/C/L ${counts} · feedback ${world.coupled?"ON":"OFF"} · reflection ${world.upReflection?"ON":"OFF"} · mutation ${world.mutationEnabled?"ON":"OFF"} · strength walk ${world.stochastic.walk?"ON":"OFF"}`;
+  document.getElementById("periods").innerHTML=SOURCE_LEVEL_META.map((m,i)=>{const arr=world.sources.filter(s=>s.scaleKey===m.key).map(s=>s.period);const mean=arr.length?arr.reduce((a,b)=>a+b,0)/arr.length:0;return `<span class="pill">${m.code}: median ${CA_CFG.periodMedians[i]} · realized μ ${mean.toFixed(1)}</span>`}).join("");
+}
+function syncToggleButtons(){
+  document.getElementById("couple").textContent=`Entity feedback: ${world.coupled?"ON":"OFF"}`;document.getElementById("couple").classList.toggle("active",world.coupled);
+  document.getElementById("fieldBtn").textContent=`Field: ${showField?"ON":"OFF"}`;document.getElementById("fieldBtn").classList.toggle("active",showField);
+  document.getElementById("upBtn").textContent=`Reflector action: ${world.upReflection?"ON":"OFF"}`;document.getElementById("upBtn").classList.toggle("active",world.upReflection);
+  document.getElementById("mutationBtn").textContent=`Mutation: ${world.mutationEnabled?"ON":"OFF"}`;document.getElementById("mutationBtn").classList.toggle("active",world.mutationEnabled);
+  [["stochStrength","strength","Strength noise"],["strengthWalk","walk","Strength walk"],["stochPeriod","period","Period jitter"],["stochTiming","timing","Timing jitter"]].forEach(([id,k,label])=>{const b=document.getElementById(id);b.textContent=`${label}: ${world.stochastic[k]?"ON":"OFF"}`;b.classList.toggle("active",world.stochastic[k]);});
+  const e=document.getElementById("entropyRng");e.textContent=`Entropy RNG: ${world.stochastic.entropy?"ON":"OFF"}`;e.classList.toggle("active",world.stochastic.entropy);
+  document.getElementById("sourceScalePreset").value=world.sourceMode;
+}
+function newWorld(useEntropy=true,plan=null){
+  const seed=useEntropy?(entropyUint32()??((Date.now()*2654435761)>>>0)):world.seed;
+  world=new InfluenceCA(seed,world?world.coupled:true,world?world.upReflection:true,world?world.mutationEnabled:false,world?world.stochastic:null,plan);
+  currentSourcePlan=world.exportSourcePlan();paused=false;document.getElementById("pause").textContent="Pause";buildSourceHits();syncToggleButtons();updateUI();draw();
+}
+function replayWorld(){world=new InfluenceCA(world.seed,world.coupled,world.upReflection,world.mutationEnabled,world.stochastic,currentSourcePlan);paused=false;document.getElementById("pause").textContent="Pause";buildSourceHits();syncToggleButtons();updateUI();draw();}
+
+document.getElementById("pause").onclick=()=>{paused=!paused;document.getElementById("pause").textContent=paused?"Resume":"Pause";};
+document.getElementById("stepOnce").onclick=()=>{if(!paused){paused=true;document.getElementById("pause").textContent="Resume";}world.step();updateUI();draw();};
+document.getElementById("newWorld").onclick=()=>newWorld(true,null);
+document.getElementById("replay").onclick=replayWorld;
+document.getElementById("couple").onclick=()=>{world.coupled=!world.coupled;world.computeField();world.updateMetrics();syncToggleButtons();updateUI();draw();};
+document.getElementById("fieldBtn").onclick=()=>{showField=!showField;syncToggleButtons();draw();};
+document.getElementById("upBtn").onclick=()=>{world.upReflection=!world.upReflection;world.computeField();world.updateMetrics();syncToggleButtons();updateUI();draw();};
+document.getElementById("mutationBtn").onclick=()=>{world.mutationEnabled=!world.mutationEnabled;syncToggleButtons();updateUI();};
+document.getElementById("stableSourceDefaults").onclick=()=>{currentSourceMode="stable";world.configureSources("stable",false);currentSourcePlan=world.exportSourcePlan();buildSourceHits();syncToggleButtons();updateUI();draw();};
+document.getElementById("sourceScalePreset").onchange=e=>{currentSourceMode=e.target.value;world.configureSources(currentSourceMode,true);currentSourcePlan=world.exportSourcePlan();buildSourceHits();syncToggleButtons();updateUI();draw();};
+document.getElementById("stochStrength").onclick=()=>{world.stochastic.strength=!world.stochastic.strength;world.computeSourceRecurrence();syncToggleButtons();updateUI();};
+document.getElementById("strengthWalk").onclick=()=>{world.stochastic.walk=!world.stochastic.walk;if(world.stochastic.walk){const lo=Math.max(0,CA_CFG.sourceStrengthWalkMin),hi=Math.max(lo,CA_CFG.sourceStrengthWalkMax);for(const s of world.sources){if(!Number.isFinite(s.walkStrength))s.walkStrength=clamp(s.amp,lo,hi);}}syncToggleButtons();updateUI();};
+document.getElementById("stochPeriod").onclick=()=>{world.stochastic.period=!world.stochastic.period;world.computeSourceRecurrence();syncToggleButtons();updateUI();};
+document.getElementById("stochTiming").onclick=()=>{world.stochastic.timing=!world.stochastic.timing;world.computeSourceRecurrence();syncToggleButtons();updateUI();};
+document.getElementById("entropyRng").onclick=()=>{world.stochastic.entropy=!world.stochastic.entropy;syncToggleButtons();};
+document.getElementById("speed").oninput=e=>{speed=Number(e.target.value);document.getElementById("speedOut").textContent=(speed<1?speed.toFixed(2):speed.toFixed(1))+"×";};
+
+document.querySelectorAll("[data-paint]").forEach(btn=>btn.onclick=()=>{paintType=Number(btn.dataset.paint);document.querySelectorAll("[data-paint]").forEach(b=>b.classList.toggle("active",b===btn));});
+document.getElementById("brushSize").onchange=e=>brushSize=Number(e.target.value)||1;
+document.getElementById("clearEntities").onclick=()=>{paused=true;document.getElementById("pause").textContent="Resume";for(let r=1;r<world.H-1;r++)for(let c=0;c<world.W;c++)world.paintCell(r,c,0);world.refreshAfterPaint();updateUI();draw();};
+function pointerToCell(e){const rect=canvas.getBoundingClientRect(),L=layout(),x=(e.clientX-rect.left)*canvas.width/rect.width,y=(e.clientY-rect.top)*canvas.height/rect.height;return{c:Math.floor((x-L.left)/L.cell),r:Math.floor((y-L.top)/L.cell)};}
+function paintAt(e){const p=pointerToCell(e);if(p.r<1||p.r>=world.H-1||p.c<0||p.c>=world.W)return;const key=`${p.r}:${p.c}:${paintType}:${brushSize}`;if(key===lastPaintKey)return;lastPaintKey=key;const half=Math.floor(brushSize/2);for(let dr=-half;dr<=half;dr++)for(let dc=-half;dc<=half;dc++)world.paintCell(p.r+dr,p.c+dc,paintType);world.refreshAfterPaint();updateUI();draw();}
+canvas.addEventListener("pointerdown",e=>{drawing=true;paused=true;document.getElementById("pause").textContent="Resume";canvas.setPointerCapture(e.pointerId);paintAt(e);});
+function updateCanvasSourceHover(e){
+  const rect=canvas.getBoundingClientRect(),L=layout(),x=(e.clientX-rect.left)*canvas.width/rect.width,y=(e.clientY-rect.top)*canvas.height/rect.height;
+  let best=-1,bestD=Infinity;
+  for(let i=0;i<world.sources.length;i++){
+    const sx=L.left+(world.sources[i].col+.5)*L.cell,sy=L.sourceY,d=Math.hypot(x-sx,y-sy);
+    if(d<bestD){bestD=d;best=i;}
+  }
+  const hitRadius=Math.max(8,L.cell*.75);
+  if(best>=0&&bestD<=hitRadius){if(activeSourceIndex!==best||!sourceHover.classList.contains("show"))showSourceHover(best);}
+  else if(activeSourceIndex!==null)hideSourceHoverSoon();
+}
+canvas.addEventListener("pointermove",e=>{if(drawing)paintAt(e);else updateCanvasSourceHover(e);});
+canvas.addEventListener("pointerleave",()=>{if(!drawing)hideSourceHoverSoon();});
+canvas.addEventListener("pointerup",()=>{drawing=false;lastPaintKey="";});canvas.addEventListener("pointercancel",()=>{drawing=false;lastPaintKey="";});
+
+function downloadBlob(blob,name){const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+function exportConfig(){
+  return{schema:"gongjing-v18.1-config-v1",applicationVersion:"v18.1-distributed-periods-strength-walk",savedAt:new Date().toISOString(),notes:document.getElementById("experimentNotes").value||"",
+    gridPreset:currentPreset,params:JSON.parse(JSON.stringify(CA_CFG)),entityLexicon:JSON.parse(JSON.stringify(ENTITY)),
+    seed:world.seed,step:world.stepNo,coupled:world.coupled,upReflection:world.upReflection,mutationEnabled:world.mutationEnabled,stochastic:{...world.stochastic},
+    sourceMode:world.sourceMode,sourceRealizationId:world.sourceRealizationId,sourcePlan:world.exportSourcePlan(),
+    types:Array.from(world.types),viability:Array.from(world.viability),reflectorEnergy:Array.from(world.energy)};
+}
+document.getElementById("saveStartConfig").onclick=()=>{const obj=exportConfig();downloadBlob(new Blob([JSON.stringify(obj,null,2)],{type:"application/json"}),`Gongjing_v18_1_${currentPreset}_seed${world.seed}_step${world.stepNo}.json`);document.getElementById("archiveStatus").textContent="Exact v18 configuration saved.";};
+document.getElementById("savePng").onclick=()=>canvas.toBlob(blob=>downloadBlob(blob,`Gongjing_v18_1_seed${world.seed}_step${world.stepNo}.png`),"image/png");
+document.getElementById("loadConfig").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const obj=JSON.parse(await f.text());if(!obj.params||!obj.sourcePlan)throw new Error("Not a v18 config.");currentPreset=obj.gridPreset||"large";CA_CFG=JSON.parse(JSON.stringify(obj.params));ENTITY=JSON.parse(JSON.stringify(obj.entityLexicon||DEFAULT_ENTITY));populateSettings();world=new InfluenceCA(obj.seed,obj.coupled,obj.upReflection,obj.mutationEnabled,obj.stochastic,obj.sourcePlan);world.stepNo=obj.step||0;if(obj.types&&obj.types.length===world.N)world.types.set(obj.types);if(obj.viability&&obj.viability.length===world.N)world.viability.set(obj.viability);if(obj.reflectorEnergy&&obj.reflectorEnergy.length===world.N)world.energy.set(obj.reflectorEnergy);world.computeField();world.updateMetrics();world.recordState();currentSourcePlan=world.exportSourcePlan();document.getElementById("experimentNotes").value=obj.notes||"";buildSourceHits();syncToggleButtons();updateUI();draw();document.getElementById("archiveStatus").textContent="Configuration loaded.";}catch(err){document.getElementById("archiveStatus").textContent="Load failed: "+err.message;}finally{e.target.value="";}};
+
+function populateScaleSettings(){
+  const body=document.getElementById("scaleSettingsBody"),specs=hierarchySpecs();body.innerHTML="";
+  specs.forEach((s,i)=>{const tr=document.createElement("tr");tr.innerHTML=`<td><b>${s.code}</b> ${s.label}</td><td><input data-period-index="${i}" type="number" min="1" max="500" step=".1" value="${CA_CFG.periodMedians[i]}"></td><td>${s.expectedCount.toFixed(2)}</td><td>${s.rawStrength.toFixed(2)}</td><td>${s.noise.toFixed(3)}</td>`;body.appendChild(tr);});
+  body.querySelectorAll("[data-period-index]").forEach(inp=>inp.addEventListener("input",()=>{CA_CFG.periodMedians[Number(inp.dataset.periodIndex)]=Number(inp.value);markSettingsDirty();}));
+}
+function populateEntitySettings(){
+  const body=document.getElementById("entitySettingsBody");body.innerHTML="";
+  for(let t=1;t<=5;t++){const e=ENTITY[t],tr=document.createElement("tr");tr.innerHTML=`<td>${e.name}</td><td><input data-entity="${t}" data-field="gain" type="number" min="0" max="3" step=".01" value="${e.gain}"></td><td><input data-entity="${t}" data-field="rotate" type="number" min="-1" max="1" step=".01" value="${e.rotate}"></td><td><input data-entity="${t}" data-field="reflectUp" type="number" min="0" max="1" step=".01" value="${e.reflectUp||0}"></td>`;body.appendChild(tr);}
+  body.querySelectorAll("[data-entity]").forEach(inp=>inp.addEventListener("input",()=>{ENTITY[Number(inp.dataset.entity)][inp.dataset.field]=Number(inp.value);markSettingsDirty();}));
+}
+function populateSettings(){
+  document.getElementById("gridPreset").value=currentPreset;
+  document.querySelectorAll("[data-param]").forEach(inp=>{const k=inp.dataset.param;if(k in CA_CFG)inp.value=CA_CFG[k];});
+  populateScaleSettings();populateEntitySettings();document.getElementById("settingsDirty").classList.remove("show");
+}
+function markSettingsDirty(){document.getElementById("settingsDirty").classList.add("show");populateScaleSettingsReadOnly();}
+function populateScaleSettingsReadOnly(){const rows=[...document.querySelectorAll("#scaleSettingsBody tr")],specs=hierarchySpecs();rows.forEach((tr,i)=>{if(!specs[i])return;tr.cells[2].textContent=specs[i].expectedCount.toFixed(2);tr.cells[3].textContent=specs[i].rawStrength.toFixed(2);tr.cells[4].textContent=specs[i].noise.toFixed(3);});}
+document.querySelectorAll("[data-param]").forEach(inp=>inp.addEventListener("input",()=>{CA_CFG[inp.dataset.param]=Number(inp.value);markSettingsDirty();}));
+document.getElementById("gridPreset").addEventListener("change",e=>{const name=e.target.value;applyGridPreset(name,true);populateSettings();document.getElementById("settingsDirty").classList.add("show");});
+document.getElementById("applySettings").onclick=()=>{currentSourceMode=document.getElementById("sourceScalePreset").value;newWorld(true,null);document.getElementById("settingsDirty").classList.remove("show");document.getElementById("archiveStatus").textContent="Settings applied to a new entropy-randomized world.";};
+document.getElementById("resetSettings").onclick=()=>{currentPreset=DEFAULTS.gridPreset;CA_CFG={...DEFAULTS,...GRID_PRESETS[currentPreset],periodMedians:DEFAULTS.periodMedians.slice()};ENTITY=JSON.parse(JSON.stringify(DEFAULT_ENTITY));populateSettings();document.getElementById("settingsDirty").classList.add("show");};
+document.getElementById("copySettings").onclick=async()=>{const obj={gridPreset:currentPreset,params:CA_CFG,entityLexicon:ENTITY};try{await navigator.clipboard.writeText(JSON.stringify(obj,null,2));document.getElementById("archiveStatus").textContent="Settings JSON copied to clipboard.";}catch(_){downloadBlob(new Blob([JSON.stringify(obj,null,2)],{type:"application/json"}),"Gongjing_v18_1_settings.json");}};
+
+window.addEventListener("resize",()=>{positionSourceHits();draw();});
+function frame(now){const dt=Math.min(.05,(now-last)/1000||.016);last=now;if(!paused){acc+=dt*speed;if(acc>=.70){acc-=.70;world.step();updateUI();}}draw();requestAnimationFrame(frame);}
+
+applyGridPreset(currentPreset,true);populateSettings();currentSourcePlan=world.exportSourcePlan();buildSourceHits();syncToggleButtons();updateUI();draw();requestAnimationFrame(frame);
+</script>
+</body>
+</html>

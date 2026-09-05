@@ -1,0 +1,43 @@
+# Gongjing 共境: Computational worldspace
+
+Gongjing is a proposed way for people and scientific AI tools to work with the same computer model of a system. That shared model is called a **computational worldspace**. It records the parts of a system, how they affect one another, the rules that limit change, and what can be observed.
+
+This repository contains three interactive **proofs of concept**: early working examples used to explore the idea.
+
+## Explore the demonstrations
+
+Open [the introduction](index.html), then choose a demonstration:
+
+| Demonstration | What to look for |
+| --- | --- |
+| [Influence cells v17](v17.html) | Small colored cells change the influence passing through them. The influence affects which cells survive or appear. |
+| [Influence cells v18.1](v18.html) | Inputs have a wider range of rhythms. Turn on **Strength walk** to let their strengths drift over time. |
+| [River and colony cells](river.html) | Water and small groups of cells affect one another in a single flowing river scene. |
+
+A **cellular automaton** is a grid whose cells change according to rules. The influence cellular automata and the river simulation are proofs of concept for Gongjing. They let visitors change conditions and observe the result.
+
+Each page includes a short guide. No account, installation, external service, or API key is needed. The models run in the browser.
+
+## The Gongjing backend
+
+The river uses the existing **GongjingCore** and **RiverColonyAdapter** model. Its controls call the core to start the world, advance it, read results, and change a rule. The calculation code is separate from the drawing code.
+
+Here, “backend” means the simulation engine running in the browser. A separate server is not required. The river uses the earlier River-Colony Emergence v10 model and its single river view. The v17 and v18.1 cell demonstrations retain their original simulation code, with simpler introductions and navigation.
+
+The longer-term aim is to help people and scientific AI tools explore, compare, and explain models through a shared interface. These pages do not yet demonstrate independent AI research.
+
+## Scope
+
+These are simplified, synthetic worlds. Influence values in the cell models are abstract quantities. The river uses relative flow values and simplified routing rules. It has not been calibrated to a real river or ecosystem. The demonstrations support exploration of feedback and pattern formation, not flood forecasting or engineering decisions.
+
+See [model and version notes](MODEL_NOTES.md) for the source versions, model assumptions, and software interface.
+
+## Run or host
+
+Open `index.html` locally, or serve this directory with any static web server. For example:
+
+```bash
+python3 -m http.server 8000
+```
+
+For GitHub Pages, choose **Deploy from a branch**, then select **main** and **/ (root)** in the repository's Pages settings. The `.nojekyll` file enables direct static-file publishing. No build step is needed.
