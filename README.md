@@ -38,11 +38,14 @@ Open [the introduction](index.html), then choose a demonstration:
 | [Influence cells v17](v17.html) | Small colored cells change the influence passing through them. The influence affects which cells survive or appear. |
 | [Influence cells v18.1](v18.html) | Inputs have a wider range of rhythms. Turn on **Strength walk** to let their strengths drift over time. |
 | [Watershed geomorphology](watershed.html) | Water, ground and plants interact. Compare the same landscape with erosion on and off. |
+| [Portable watershed showcase](Gongjing_Watershed_Ecosystem_Showcase.html) | The complete watershed computational worldspace, including its interface and parameters, packaged in one HTML file. |
 | [Related river and colony experiment](river.html) | Water and small groups of cells affect one another in a single flowing river scene. |
 
 A **cellular automaton** is a grid whose cells change according to rules. The influence cellular automata and the river simulation are proofs of concept for Gongjing. They let visitors change conditions and observe the result.
 
 Each page includes a short guide. No account, installation, external service, or API key is needed. The models run in the browser.
+
+The portable watershed showcase is the same live Gongjing example as `watershed.html`, but its styles, core, watershed module, renderer and controls are embedded in one file. This makes it useful as a self-contained demonstration or archived example. It is not a separate scientific model.
 
 ## The Gongjing backend
 
