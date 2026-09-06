@@ -27,7 +27,7 @@ In the computational view, nodes represent entities and their recorded states, s
 
 The figure illustrates the broader idea. The demonstrations below implement selected, simplified interactions; they do not simulate the complete water cycle, dam operation or hydropower system shown in the illustration.
 
-This repository contains three interactive **proofs of concept**: early working examples used to explore the idea.
+This repository contains interactive **proofs of concept**: early working examples used to explore the idea.
 
 ## Explore the demonstrations
 
@@ -37,7 +37,8 @@ Open [the introduction](index.html), then choose a demonstration:
 | --- | --- |
 | [Influence cells v17](v17.html) | Small colored cells change the influence passing through them. The influence affects which cells survive or appear. |
 | [Influence cells v18.1](v18.html) | Inputs have a wider range of rhythms. Turn on **Strength walk** to let their strengths drift over time. |
-| [River and colony cells](river.html) | Water and small groups of cells affect one another in a single flowing river scene. |
+| [Watershed geomorphology](watershed.html) | Water, ground and plants interact. Compare the same landscape with erosion on and off. |
+| [Related river and colony experiment](river.html) | Water and small groups of cells affect one another in a single flowing river scene. |
 
 A **cellular automaton** is a grid whose cells change according to rules. The influence cellular automata and the river simulation are proofs of concept for Gongjing. They let visitors change conditions and observe the result.
 
@@ -45,15 +46,24 @@ Each page includes a short guide. No account, installation, external service, or
 
 ## The Gongjing backend
 
-The river uses the existing **GongjingCore** and **RiverColonyAdapter** model. Its controls call the core to start the world, advance it, read results, and change a rule. The calculation code is separate from the drawing code.
+The watershed uses **GongjingCore** and a **WatershedAdapter**. Its controls call the core to start the world, advance it, read results, and change conditions. The module calculates water flow, ground lowering and plant growth. The view draws the observation fields returned by Gongjing. The calculation code is separate from the drawing code.
 
-Here, “backend” means the simulation engine running in the browser. A separate server is not required. The river uses the earlier River-Colony Emergence v10 model and its single river view. The v17 and v18.1 cell demonstrations retain their original simulation code, with simpler introductions and navigation.
+Here, “backend” means the simulation engine running in the browser. A separate server is not required. The watershed keeps the original showcase's single landscape view and colors, with live calculations in place of stored playback frames. The related river experiment uses the same core with **RiverColonyAdapter**. The v17 and v18.1 cell demonstrations retain their original simulation code, with simpler introductions and navigation.
+
+## Try a watershed experiment
+
+1. Open the watershed and select **Watch from the start**. Blue flow paths and brown areas of ground lowering develop as the model advances.
+2. Choose **No erosion**, then **Full feedback**. Both conditions start from the same landscape number and run for 280 steps.
+3. Hide water and plants to inspect the ground. Use the timeline to compare earlier calculated states; the measurements follow the displayed step.
+4. Open **Gongjing worldspace parameters** to inspect the live worldspace record, change selected influence rules, or save the experiment state.
+
+Open **Inspect the Gongjing architecture and live calls** to see its six commands and recent calls. Landscape number 0 reproduces the original benchmark's starting fields. Other numbers generate repeatable new landscapes.
 
 The longer-term aim is to help people and scientific AI tools explore, compare, and explain models through a shared interface. These pages do not yet demonstrate independent AI research.
 
 ## Scope
 
-These are simplified, synthetic worlds. Influence values in the cell models are abstract quantities. The river uses relative flow values and simplified routing rules. It has not been calibrated to a real river or ecosystem. The demonstrations support exploration of feedback and pattern formation, not flood forecasting or engineering decisions.
+These are simplified, synthetic worlds. Influence values in the cell models are abstract quantities. The watershed uses relative values and simplified downstream routing. It demonstrates landscape change, but has not been calibrated to a real watershed. It does not model storm timing, water storage or a sediment transport budget. The demonstrations support exploration of feedback and pattern formation, not flood forecasting or engineering decisions.
 
 See [model and version notes](MODEL_NOTES.md) for the source versions, model assumptions, and software interface.
 

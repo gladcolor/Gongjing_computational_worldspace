@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="description" content="A live Gongjing computational worldspace case study connecting watershed geomorphology, inspectable influence rules, controlled interventions and reproducible observations.">
+  <title>Gongjing · Watershed computational worldspace</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/watershed.css">
+</head>
+<body>
+<header>
+  <a class="brand" href="index.html">共境 Gongjing <span>· Computational worldspace</span></a>
+  <div class="note">Computational worldspace case study<br>Watershed geomorphology</div>
+</header>
+<main>
+  <div id="error" class="error" role="alert" hidden></div>
+  <div class="hero">
+    <div>
+      <section class="world" aria-label="Live watershed computational worldspace">
+        <canvas id="c" role="img" aria-label="A calculated landscape of blue flow paths, green vegetation and brown areas where the ground has worn down. Current observations are shown beside the picture.">Enable JavaScript and canvas support to see the watershed.</canvas>
+        <div class="worldTop">
+          <span class="eyebrow">Gongjing computational worldspace</span>
+          <h1>A watershed as a shared,<br>testable world.</h1>
+          <p>Terrain, water, vegetation and resources are represented as changing entities. Their influence rules, interventions and observations remain connected as the landscape evolves.</p>
+          <div class="worldTags" aria-label="Worldspace capabilities"><span>Live state</span><span>Explicit influences</span><span>Repeatable tests</span></div>
+        </div>
+        <div class="worldBadge" id="worldBadge">Calculating the landscape</div>
+        <div class="timeline">
+          <div class="timeline-head"><label for="scrub">Review this world</label><b id="step">Step 0</b></div>
+          <input id="scrub" type="range" min="0" max="0" step="1" value="0" aria-label="Review calculated model states">
+          <div class="timeline-head"><span id="historyStart">Step 0</span><span id="historyEnd">Step 0</span></div>
+        </div>
+      </section>
+      <div class="legend"><span><i class="sw" style="background:#1b8cc5"></i>Water flow</span><span><i class="sw" style="background:#5d9650"></i>Vegetation</span><span><i class="sw" style="background:#6f5744"></i>Ground lowering</span></div>
+      <p class="history-note" id="historyNote">The world is being calculated through the Gongjing core.</p>
+    </div>
+    <aside class="side">
+      <section class="card">
+        <span class="card-kicker">Advance the world</span>
+        <h2>Follow the model through time</h2>
+        <button class="primary wide" id="watch">Watch from the start</button>
+        <div class="buttons"><button id="play">Continue</button><button id="stepOnce">Step once</button></div>
+        <label for="speed" class="control-label">Playback speed <b id="speedOut">20 steps/sec</b></label>
+        <input id="speed" type="range" min="2" max="40" value="20" class="wide-range">
+        <p>The opening state is calculated to step 280. Review earlier states or continue the same world.</p>
+        <div class="status" id="status" role="status">Starting the model</div>
+      </section>
+      <section class="card">
+        <span class="card-kicker">Intervene</span>
+        <h2>Compare influence rules</h2>
+        <div class="scenarios" id="scenarios">
+          <button class="scenario active" data-key="full" aria-pressed="true"><b>Full feedback</b><small>Water, terrain and plants interact.</small></button>
+          <button class="scenario" data-key="diffuse" aria-pressed="false"><b>No erosion</b><small>Water cannot lower the ground.</small></button>
+          <button class="scenario" data-key="abiotic" aria-pressed="false"><b>No plants</b><small>Water and terrain act alone.</small></button>
+          <button class="scenario" data-key="vegetated" aria-pressed="false"><b>No water damage</b><small>Strong flow no longer harms plants.</small></button>
+          <button class="scenario" data-key="smooth" aria-pressed="false"><b>Stronger smoothing</b><small>Ground changes spread faster.</small></button>
+          <button class="scenario" data-key="runaway" aria-pressed="false"><b>More erosion</b><small>Ground wears away more easily.</small></button>
+        </div>
+        <p>Each condition starts from the same landscape, so differences can be traced to changed rules.</p>
+      </section>
+      <section class="card">
+        <span class="card-kicker">Observe</span>
+        <h2>Read the worldspace</h2>
+        <div class="metrics">
+          <div class="metric"><b id="mflow">0.0%</b><span>Flow in the busiest 5% of cells</span></div>
+          <div class="metric"><b id="mdepth">0.000</b><span>Average ground lowering</span></div>
+          <div class="metric"><b id="mveg">0.000</b><span>Average vegetation, 0 to 1</span></div>
+          <div class="metric"><b id="mgain">0.0</b><span>Change in concentrated flow</span></div>
+        </div>
+        <p>These values are observations returned for the state currently shown.</p>
+      </section>
+      <section class="card">
+        <span class="card-kicker">Inspect state</span>
+        <h2>Choose observation fields</h2>
+        <div class="layers"><label class="toggle"><input id="water" type="checkbox" checked>Water</label><label class="toggle"><input id="veg" type="checkbox" checked>Vegetation</label><label class="toggle"><input id="incision" type="checkbox" checked>Ground</label><label class="toggle"><input id="resource" type="checkbox">Resources</label></div>
+        <p>The view is drawn from Gongjing observation fields. Hide layers to inspect the state beneath them.</p>
+      </section>
+    </aside>
+  </div>
+
+  <section class="worldspace-strip" aria-labelledby="worldspaceHeading">
+    <div class="strip-intro"><span class="eyebrow">Why this is a computational worldspace</span><h2 id="worldspaceHeading">One evolving system, kept scientifically inspectable.</h2><p>A domain calculation becomes more useful to people and scientific AI when its state, assumptions, interventions and evidence remain connected.</p></div>
+    <div class="strip-card"><span>01</span><h3>Shared representation</h3><p>Entities, states, resources, influences and constraints use a common structure that a person or software agent can inspect.</p></div>
+    <div class="strip-card"><span>02</span><h3>Controlled intervention</h3><p>Change one permitted rule while preserving the starting world, then compare the resulting trajectory.</p></div>
+    <div class="strip-card"><span>03</span><h3>Traceable observations</h3><p>Every displayed measure is tied to a model state, scale, parameter set and provenance record.</p></div>
+  </section>
+
+  <section class="explain" id="about">
+    <div><h2>From a watershed model to a shared scientific world</h2><small>The watershed is one replaceable domain module inside the Gongjing architecture.</small></div>
+    <div>
+      <p><b>A hydrology calculation alone produces model states. Gongjing organizes how those states can be described, observed, changed and compared.</b> Its shared core provides the same commands for any compatible domain module. Here, a watershed adapter supplies simplified rules for flow, terrain change, vegetation and resources.</p>
+      <p>Each update follows a feedback loop: terrain and vegetation redirect water; water changes terrain and vegetation; the next calculation uses the changed world. Gongjing retains the parameters and observations needed to inspect that loop.</p>
+      <p class="feedback-line"><b>Same starting world + one changed influence rule = a controlled computational comparison.</b> This is the central scientific workflow demonstrated here.</p>
+      <div class="table-scroll"><table><thead><tr><th>Worldspace concept</th><th>Meaning in this case study</th></tr></thead><tbody>
+        <tr><td>Entities and states</td><td>Terrain surface, routed water, vegetation and stored resources, each with a state that changes over time.</td></tr>
+        <tr><td>Influences</td><td>Terrain routes water; water lowers terrain and affects vegetation; vegetation resists flow and stabilizes terrain.</td></tr>
+        <tr><td>Resources</td><td>Locally available water and stored resources can support vegetation, depending on flow conditions.</td></tr>
+        <tr><td>Agency</td><td>A person now chooses interventions through the interface. A scientific AI could use the same defined commands, but autonomous research is not claimed here.</td></tr>
+        <tr><td>Constraints</td><td>Water enters across the grid, moves to downstream cells and leaves through an open lower boundary. State values stay within declared limits.</td></tr>
+        <tr><td>Observations and scale</td><td>Cell fields are summarized into flow-path candidates and watershed-level measures without discarding the underlying state.</td></tr>
+      </tbody></table></div>
+    </div>
+  </section>
+
+  <details class="details experiment-details">
+    <summary>A reproducible case: does erosion reorganize flow?</summary>
+    <p>Use landscape number <b>0</b>. Compare <b>Full feedback</b> with <b>No erosion</b> at step <b>280</b>. Terrain and vegetation begin in the same state; the erosion rule is the controlled difference.</p>
+    <div class="table-scroll"><table><thead><tr><th>Condition</th><th>Average ground lowering</th><th>Flow in busiest 5% of cells</th></tr></thead><tbody><tr><td>Full feedback</td><td>0.103 model units</td><td>47.9%</td></tr><tr><td>No erosion</td><td>0.000 model units</td><td>29.9%</td></tr></tbody></table></div>
+    <p>In this model comparison, erosion changes the terrain and produces more concentrated flow. Plants can still redirect water when erosion is off. Gongjing makes the comparison repeatable by keeping the starting state, settings, intervention and observations together.</p>
+    <p>The flow measure adds routed flow across cells below the first eight rows. It describes the distribution of calculated flow within the grid, not separate volumes leaving a real watershed.</p>
+  </details>
+
+  <details class="details parameter-disclosure" id="modelParameters">
+    <summary><span><b>Open Gongjing worldspace parameters</b><small>Inspect the current world, expose selected influence rules, and manage its experiment record.</small></span><span class="disclosure-icon" aria-hidden="true">+</span></summary>
+    <fieldset id="parameterControls">
+      <p class="panel-intro"><b>Gongjing is domain-neutral.</b> The core exposes a common worldspace record and intervention interface. The values under <i>Influence rules</i> belong to this watershed module and are surfaced through that interface.</p>
+      <div class="parameter-tabs" role="tablist" aria-label="Gongjing parameter groups">
+        <button type="button" role="tab" id="worldspaceTab" aria-controls="worldspacePanel" aria-selected="true" data-panel="worldspacePanel">Worldspace record</button>
+        <button type="button" role="tab" id="influenceTab" aria-controls="influencePanel" aria-selected="false" data-panel="influencePanel" tabindex="-1">Influence rules</button>
+        <button type="button" role="tab" id="recordTab" aria-controls="recordPanel" aria-selected="false" data-panel="recordPanel" tabindex="-1">Experiment record</button>
+      </div>
+      <section class="parameter-panel" id="worldspacePanel" role="tabpanel" aria-labelledby="worldspaceTab">
+        <div class="panel-heading"><div><h3>Current computational world</h3><p>Live metadata from Gongjing observation and description packets.</p></div><span class="live-chip">Inspectable state</span></div>
+        <dl class="snapshot-grid">
+          <div><dt>Domain adapter</dt><dd id="paramAdapter">watershed-geomorphology</dd></div><div><dt>Observation scale</dt><dd id="paramScale">landscape</dd></div><div><dt>Grid</dt><dd id="paramGrid">60 × 60 cells</dd></div><div><dt>Displayed step</dt><dd id="paramStep">0</dd></div><div><dt>Landscape number</dt><dd id="paramSeed">0</dd></div><div><dt>Entity kinds</dt><dd id="paramEntities">3</dd></div><div><dt>State fields</dt><dd id="paramFields">5</dd></div><div><dt>Observations</dt><dd id="paramObservations">7</dd></div><div><dt>Candidate path groups</dt><dd id="paramPaths">Calculating</dd></div><div><dt>Calibration status</dt><dd id="paramCalibration">Concept model, not calibrated</dd></div>
+        </dl>
+        <p class="panel-note">Across scales, Gongjing keeps the 3,600 cell states available while its <b>coarseGrain</b> command groups connected high-flow cells into candidate paths and its observations summarize the watershed.</p>
+      </section>
+      <section class="parameter-panel" id="influencePanel" role="tabpanel" aria-labelledby="influenceTab" hidden>
+        <div class="panel-heading"><div><h3>Selected influence parameters</h3><p>Changing a slider sends an <b>intervene</b> command to the current world. Continue the model to observe the new trajectory.</p></div><span class="live-chip warm">Live intervention</span></div>
+        <div class="parameter-grid">
+          <div class="param"><label for="rainfall">Water input</label><output id="rainfallOut" for="rainfall">1.00×</output><input id="rainfall" type="range" min="0" max="2" step=".25" value="1"><small>External water supplied to every grid cell.</small></div>
+          <div class="param"><label for="routingBeta">Terrain steering</label><output id="routingBetaOut" for="routingBeta">75</output><input id="routingBeta" type="range" min="10" max="150" step="5" value="75"><small>How strongly lower neighboring terrain attracts flow.</small></div>
+          <div class="param"><label for="erosionRate">Erosion strength</label><output id="erosionOut" for="erosionRate">0.0013</output><input id="erosionRate" type="range" min="0" max=".003" step=".0001" value=".0013"><small>How quickly concentrated flow can lower unprotected ground.</small></div>
+          <div class="param"><label for="vegStabilization">Vegetation stabilization</label><output id="vegStabilizationOut" for="vegStabilization">2.8</output><input id="vegStabilization" type="range" min="0" max="6" step=".2" value="2.8"><small>How strongly vegetation reduces erosion in its cell.</small></div>
+          <div class="param"><label for="vegGrowth">Vegetation growth</label><output id="vegGrowthOut" for="vegGrowth">0.045</output><input id="vegGrowth" type="range" min="0" max=".09" step=".005" value=".045"><small>Growth response to locally stored resources.</small></div>
+          <div class="param"><label for="floodDamage">High-flow plant damage</label><output id="floodDamageOut" for="floodDamage">0.030</output><input id="floodDamage" type="range" min="0" max=".06" step=".005" value=".03"><small>Vegetation loss when modeled shear exceeds its threshold.</small></div>
+          <div class="param"><label for="smoothing">Ground smoothing</label><output id="smoothingOut" for="smoothing">0.035</output><input id="smoothing" type="range" min="0" max=".15" step=".005" value=".035"><small>Local spreading of the ground-lowering field.</small></div>
+        </div>
+        <p class="panel-note">These are simplified, relative parameters selected to expose the influence structure. They are not measured coefficients for a real watershed.</p>
+      </section>
+      <section class="parameter-panel" id="recordPanel" role="tabpanel" aria-labelledby="recordTab" hidden>
+        <div class="panel-heading"><div><h3>Reproducibility and provenance</h3><p>Keep the landscape number fixed for a controlled comparison, or save the complete current state.</p></div><span class="live-chip">Experiment record</span></div>
+        <div class="record-grid"><div><span>Active condition</span><b id="recordScenario">Full feedback</b></div><div><span>Recorded interventions</span><b id="recordInterventions">0</b></div><div><span>Starting generator</span><b id="recordGenerator">Original seed-0 fields</b></div></div>
+        <div class="seed-row"><label for="seedInput">Landscape number</label><input id="seedInput" type="number" value="0" min="0" max="4294967295" step="1"><button id="applySeed">Use this landscape</button><button id="newSeed">New landscape</button></div>
+        <p>Number 0 uses the original showcase's starting terrain. Other whole numbers generate repeatable synthetic landscapes. Keep the number unchanged when comparing influence rules.</p>
+        <div class="buttons"><button id="saveState">Save experiment</button><button id="loadState">Load experiment</button><button id="saveImage">Save picture</button></div>
+        <input class="visually-hidden" id="loadFile" type="file" accept=".json,application/json" aria-label="Choose a saved watershed experiment">
+      </section>
+    </fieldset>
+  </details>
+
+  <details class="details" id="architecture">
+    <summary>Inspect the Gongjing architecture and live calls</summary>
+    <p><b>Shared core → watershed module → observation packet.</b> The core uses six domain-independent commands. The view draws only the returned observation fields, while domain calculations remain in the watershed module.</p>
+    <div class="table-scroll"><table><thead><tr><th>Command</th><th>Purpose</th></tr></thead><tbody><tr><td>initialize</td><td>Create a world from a landscape number and parameter set.</td></tr><tr><td>step</td><td>Calculate its next state.</td></tr><tr><td>observe</td><td>Return fields, measurements, scale and provenance.</td></tr><tr><td>describe</td><td>Expose entities, influences, constraints and assumptions.</td></tr><tr><td>intervene</td><td>Change an allowed parameter, restart or restore a state.</td></tr><tr><td>coarseGrain</td><td>Summarize connected cell-level patterns at a larger scale.</td></tr></tbody></table></div>
+    <p id="worldspaceStatus">Waiting for observations.</p><p id="candidateStatus"></p><div class="call-counts" id="callCounts"></div><pre class="trace" id="trace" aria-label="Recent Gongjing calls"></pre><p id="balance"></p>
+  </details>
+  <details class="details">
+    <summary>Scientific scope and implementation checks</summary>
+    <p><b>This is an architecture proof of concept with a functioning landscape-evolution module.</b> It is not presented as a calibrated watershed forecast. Its scientific purpose is to demonstrate how an evolving domain model can be made inspectable, intervenable, comparable and reproducible through Gongjing.</p>
+    <p>The default landscape and numerical rules come from the original watershed showcase benchmark. The live JavaScript calculation has been checked against its Python reference through 280 steps. All displayed quantities use relative model units.</p>
+    <p>Water is routed to three positions in the next grid row, with uniform input and an open lower edge. The module is a downstream routing approximation, not a full two-dimensional fluid solver. It does not represent a measured watershed, storm timing, water storage or a sediment transport budget. Ground lowering is capped, and smoothing acts on the lowering field. Candidate paths are cross-scale descriptions of model fields, not mapped real rivers.</p>
+    <p>Modular landscape modeling has a broader scientific background, including <a href="https://esurf.copernicus.org/articles/8/379/2020/" target="_blank" rel="noopener noreferrer">Landlab v2.0</a>. This demonstration uses its own compact watershed module and does not run Landlab.</p>
+  </details>
+  <noscript><div class="error">Enable JavaScript to calculate and explore the watershed.</div></noscript>
+</main>
+<footer>Gongjing 共境 · Computational worldspace · Watershed architecture proof of concept</footer>
+<script src="assets/gongjing-core.js"></script>
+<script src="assets/watershed-initial.js"></script>
+<script src="assets/watershed-adapter.js"></script>
+<script src="assets/watershed-renderer.js"></script>
+<script src="assets/watershed-ui.js"></script>
+</body>
+</html>
