@@ -1,6 +1,31 @@
 # Gongjing 共境: Computational worldspace
 
-Gongjing is a proposed way for people and scientific AI tools to work with the same computer model of a system. That shared model is called a **computational worldspace**. It records the parts of a system, how they affect one another, the rules that limit change, and what can be observed.
+Gongjing (共境) is an experimental framework for representing **how parts of a system influence one another**. Its goal is to help people and scientific AI tools use the same computer model to test changes and compare outcomes. This shared environment, called a **computational worldspace**, holds the parts of a system, their current conditions, their influences, the rules for change, and the observations collected as the model runs.
+
+[![Gongjing computational worldspace: sunlight and gravity drive the water cycle, while a human agent uses channels, a dam and a power plant to change water flow and generate electricity. An inset connects the water cycle, watershed and local infrastructure as entities, states and influences.](assets/gongjing-computational-worldspace.png)](assets/gongjing-computational-worldspace.png)
+
+*Conceptual overview. Natural processes and purposeful actions both change influences within a shared world. The inset represents the same system at three connected scales. Click the figure to view it at full size.*
+
+## The core idea: influence
+
+An **influence** describes how one part of a system can change another part's state or behavior. For example, sunlight warms water, gravity moves water downhill, and a dam changes where water is stored and when it is released.
+
+| Concept | Plain-English meaning | Example in the figure |
+| --- | --- | --- |
+| **Entity** | A part of the world represented in the model. | Water, a river, a dam or a person. |
+| **Influence** | The capacity of one entity to change another. | Solar heating changes water temperature; a gate changes flow. |
+| **Resource** | An entity or relationship that is useful for a particular goal. | Stored water and the energy available as it moves to a lower elevation can support electricity generation. |
+| **Agent** | An entity with agency: it can observe conditions and choose actions toward a goal. | A person monitors water level, flow and power, then adjusts a gate. |
+
+**Agents can reorganize entities and use resources to change influences.** A channel redirects water, a dam regulates its release, and a turbine makes its energy useful for generating electricity. An agent is therefore a kind of entity; being a resource is a role that depends on the goal and situation.
+
+## One world, connected scales
+
+The figure links the **water cycle**, a **watershed**, and a **dam and power plant**. Rainfall supplies the watershed, the reservoir supplies water to the local infrastructure, and gate decisions change downstream flow. Water returning to the ocean connects the watershed back to the broader cycle.
+
+In the computational view, nodes represent entities and their recorded states, such as water level, gate opening and power output. Arrows represent influences. Connecting these scales lets a model relate local actions to wider changes. Representing these relationships for shared use by people and AI is Gongjing's development goal.
+
+The figure illustrates the broader idea. The demonstrations below implement selected, simplified interactions; they do not simulate the complete water cycle, dam operation or hydropower system shown in the illustration.
 
 This repository contains three interactive **proofs of concept**: early working examples used to explore the idea.
 
